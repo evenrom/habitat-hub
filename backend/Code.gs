@@ -143,7 +143,7 @@ function analyzeAndUpload(payload) {
 
 
     // 2. Call Gemini API
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
 
     const promptText = "Analyze this furniture image. Extract: Name, Price (numbers only), Dimensions (Length, Width, Height). Return STRICTLY a valid JSON object with keys: name, price, dim_l, dim_w, dim_h, image_analysis. If a dimension is unknown, use 'Unknown'.";
 
