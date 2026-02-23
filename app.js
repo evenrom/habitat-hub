@@ -136,6 +136,7 @@ async function apiCall(action, payload = {}) {
         return data;
     } catch (error) {
         console.error('API Error:', error);
+        alert('שגיאת מערכת: ' + (error.message || "Unknown error occurred"));
         showToast('Error: ' + error.message);
         return null;
     }
