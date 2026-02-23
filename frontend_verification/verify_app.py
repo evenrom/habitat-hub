@@ -8,7 +8,7 @@ def run(playwright):
 
     # Get absolute path to index.html
     cwd = os.getcwd()
-    file_path = f"file://{cwd}/frontend/index.html"
+    file_path = f"file://{cwd}/index.html"
 
     print(f"Navigating to {file_path}")
 
