@@ -314,10 +314,10 @@ body {
 }
 
 .nav-item.active {
-  color: var(--primary-color);
+  color: var(--primary-color) !important;
 }
 [data-theme='dark'] .nav-item.active {
-    color: var(--color-accent);
+    color: var(--primary-color) !important; /* Force Royal Green even in Dark Mode */
 }
 
 .nav-item .material-icons-outlined {
