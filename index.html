@@ -11,7 +11,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700&family=Rubik:wght@300;400;500;700&display=swap" rel="stylesheet">
 
     <!-- Icons -->
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined|Material+Icons+Round" rel="stylesheet">
+
+    <!-- Favicon -->
+    <link rel="icon" href="https://img.icons8.com/color/48/000000/green-house.png" type="image/png">
 
     <!-- Libraries -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" integrity="sha512-cyzxRvewl+FOKTtpBzYPXuekjqmYpVE86qjztq0FSaT9uYkDP9qSja14mtj56Yj147Jbn+Ggm1n1+eDDdqK+VQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -26,9 +29,12 @@
     <div id="app">
         <!-- Header -->
         <header class="app-header">
+            <button id="back-to-rooms" class="icon-btn hidden" aria-label="Back">
+                <span class="material-icons-outlined">arrow_back</span>
+            </button>
             <h1 id="page-title">Habitat Hub</h1>
-            <button id="theme-toggle" aria-label="Toggle Dark Mode">
-                <span class="material-icons-round">dark_mode</span>
+            <button id="theme-toggle" class="icon-btn" aria-label="Toggle Dark Mode">
+                <span class="material-icons-outlined">dark_mode</span>
             </button>
         </header>
 
@@ -46,9 +52,6 @@
 
             <!-- VIEW: ROOM DETAIL (Hidden by default) -->
             <section id="view-room-detail" class="view hidden">
-                <button class="back-btn" id="back-to-rooms" aria-label="Back to Rooms">
-                    <span class="material-icons-round">arrow_back</span> Back
-                </button>
                 <h2 id="room-detail-name">Room Name</h2>
 
                 <div class="items-list" id="room-items-container">
@@ -57,7 +60,7 @@
 
                 <!-- FAB for Adding Item -->
                 <button id="fab-add-item" class="fab" aria-label="Add New Item">
-                    <span class="material-icons-round">add</span>
+                    <span class="material-icons-outlined">add</span>
                 </button>
             </section>
 
@@ -69,6 +72,7 @@
                 </div>
                 <div class="floorplan-controls">
                     <p class="hint">Pinch to Zoom / Drag to Pan</p>
+                    <button class="btn-primary" style="margin-top: 10px;">העלה/החלף תוכנית</button>
                 </div>
             </section>
 
@@ -91,15 +95,15 @@
         <!-- Bottom Navigation -->
         <nav class="bottom-nav">
             <button class="nav-item active" data-target="view-rooms" aria-label="Rooms">
-                <span class="material-icons-round">weekend</span>
+                <span class="material-icons-outlined">weekend</span>
                 <span class="label">Rooms</span>
             </button>
             <button class="nav-item" data-target="view-floorplan" aria-label="Floor Plan">
-                <span class="material-icons-round">map</span>
+                <span class="material-icons-outlined">map</span>
                 <span class="label">Plan</span>
             </button>
             <button class="nav-item" data-target="view-budget" aria-label="Budget">
-                <span class="material-icons-round">account_balance_wallet</span>
+                <span class="material-icons-outlined">account_balance_wallet</span>
                 <span class="label">Budget</span>
             </button>
         </nav>
@@ -110,7 +114,7 @@
                 <div class="modal-header">
                     <h3>Add New Item</h3>
                     <button class="close-modal" aria-label="Close">
-                        <span class="material-icons-round">close</span>
+                        <span class="material-icons-outlined">close</span>
                     </button>
                 </div>
                 <div class="modal-body">
@@ -136,7 +140,7 @@
                         </div>
 
                         <button type="button" id="btn-analyze" class="btn-primary" disabled>
-                            <span class="material-icons-round">auto_awesome</span> Analyze with AI
+                            <span class="material-icons-outlined">auto_awesome</span> Analyze with AI
                         </button>
                     </form>
                 </div>
@@ -149,7 +153,7 @@
                 <div class="modal-header">
                     <h3>Review Details</h3>
                     <button class="close-modal" aria-label="Close">
-                        <span class="material-icons-round">close</span>
+                        <span class="material-icons-outlined">close</span>
                     </button>
                 </div>
                 <div class="modal-body">

@@ -25,7 +25,7 @@ def run(playwright):
                         status=200,
                         content_type="application/json",
                         body=json.dumps({
-                            "rooms": ["Living Room", "Kitchen", "Bedroom"],
+                            "rooms": ["Living Room", "Kitchen", "Bedroom", "סלון"],
                             "items": [
                                 { "ID": "1", "Room": "Living Room", "Type": "Main", "Name": "Sofa", "Price": 5000, "Dim_L": "200", "Dim_W": "90", "Dim_H": "80", "ImageID": "", "ProductURL": "" },
                                 { "ID": "2", "Room": "Living Room", "Type": "Alternative", "ParentID": "1", "Name": "Sofa Option 2", "Price": 4500, "Dim_L": "190", "Dim_W": "85", "Dim_H": "80", "ImageID": "", "ProductURL": "" }
@@ -70,6 +70,22 @@ def run(playwright):
     page.click("[data-target='view-budget']")
     page.wait_for_timeout(500)
     page.screenshot(path="frontend_verification/budget_view.png")
+
+    # 4. Verify FAB Add Item Modal (CRITICAL CHECK)
+    # Go back to rooms then detail
+    page.click("[data-target='view-rooms']")
+    page.click("text=Living Room")
+
+    print("Clicking FAB...")
+    page.click("#fab-add-item")
+
+    try:
+        page.wait_for_selector("#modal-add-item.visible", timeout=2000)
+        print("Add Item Modal is visible!")
+        page.screenshot(path="frontend_verification/add_item_modal.png")
+    except:
+        print("Add Item Modal NOT visible.")
+        page.screenshot(path="frontend_verification/error_modal.png")
 
     browser.close()
 

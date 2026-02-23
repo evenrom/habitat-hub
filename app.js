@@ -6,6 +6,18 @@ const CONFIG = {
     floorPlanImg: 'https://via.placeholder.com/2000x1500.png?text=Floor+Plan+High+Res' // Placeholder, in real app this would be configurable
 };
 
+// Icon Mapping
+const ROOM_ICONS = {
+    'מטבח': 'restaurant',
+    'סלון': 'weekend',
+    'מבואה': 'sensor_door',
+    'חדר שינה': 'bed',
+    'ממ"ד': 'security',
+    'רחצה ושירותים': 'bathtub'
+};
+
+const DEFAULT_ROOM_ICON = 'meeting_room';
+
 // State
 const store = {
     rooms: [], // ['Kitchen', 'Living Room'...]
@@ -110,12 +122,7 @@ async function apiCall(action, payload = {}) {
     try {
         const response = await fetch(BACKEND_URL, {
             method: 'POST',
-            body: JSON.stringify(body), // GAS requires stringified body for text/plain (no CORS preflight usually needed if simple, but here we use POST)
-            // Note: GAS `doPost` often needs 'Content-Type': 'text/plain;charset=utf-8' to avoid CORS preflight issues with application/json
-            // However, modern fetch might handle it. Best practice for GAS is often no-cors or text/plain.
-            // Let's try standard first, if fails we adjust.
-            // Actually, for GAS Web App to return JSON, we often use redirect.
-            // Standard approach: Send as text/plain to avoid CORS strictness if on different domain.
+            body: JSON.stringify(body),
             headers: {
                 'Content-Type': 'text/plain;charset=utf-8'
             }
@@ -172,33 +179,23 @@ function setupNavigation() {
 }
 
 function switchView(viewId) {
+    // Hide all views first
     Object.values(els.views).forEach(el => {
         el.classList.remove('active');
-        el.classList.add('hidden'); // Ensure hidden class is applied
-        // Wait, styles.css uses .view { display: none } and .active { display: block }.
-        // .hidden is !important display: none.
-        // Let's rely on .active toggle logic mainly.
-        // Actually, CSS says .view is display:none, .view.active is display:block.
-        // So just toggling active is enough.
-        // BUT, room-detail is special, it's not in nav.
-        if (viewId === 'view-rooms' && el.id === 'view-room-detail') return; // Don't mess with detail if going to rooms? No, hide detail.
-    });
-
-    // Reset logic
-    document.querySelectorAll('.view').forEach(v => {
-        v.classList.remove('active');
-        // v.classList.add('hidden'); // Optional if CSS handles it
+        el.classList.add('hidden');
     });
 
     const target = document.getElementById(viewId);
     if (target) {
-        target.classList.add('active');
         target.classList.remove('hidden');
+        target.classList.add('active');
     }
 
-    // Special case for Floor Plan to resize panzoom
-    if (viewId === 'view-floorplan') {
-        // Trigger resize event or similar if needed
+    // Header Back Button Logic
+    if (viewId === 'view-room-detail') {
+        els.backToRooms.classList.remove('hidden');
+    } else {
+        els.backToRooms.classList.add('hidden');
     }
 
     // Special Refresh for Budget
@@ -222,8 +219,10 @@ function renderRoomList() {
     store.rooms.forEach(roomName => {
         const card = document.createElement('div');
         card.className = 'room-card';
+        const iconName = ROOM_ICONS[roomName] || DEFAULT_ROOM_ICON;
+
         card.innerHTML = `
-            <div class="room-icon"><span class="material-icons-round">meeting_room</span></div>
+            <div class="room-icon"><span class="material-icons-outlined">${iconName}</span></div>
             <h3>${roomName}</h3>
             <p class="count">${countItemsInRoom(roomName)} Items</p>
         `;
@@ -240,11 +239,7 @@ function openRoomDetail(roomName) {
     store.currentRoom = roomName;
     els.roomDetailName.textContent = roomName;
     renderRoomItems(roomName);
-
-    // Hide Rooms View, Show Detail View
-    els.views.rooms.classList.remove('active');
-    els.views.roomDetail.classList.remove('hidden');
-    els.views.roomDetail.classList.add('active');
+    switchView('view-room-detail');
 }
 
 function renderRoomItems(roomName) {
@@ -271,12 +266,6 @@ function createItemElement(mainItem, allRoomItems) {
     const div = document.createElement('div');
     div.className = 'item-card';
 
-    // Main Item HTML
-    // We need a way to get image URL. Assuming Google Drive ID logic or direct URL.
-    // If it's a Drive ID (from backend), we need a proxy or thumbnail link.
-    // GAS backend returns imageID. Drive thumbnail: https://lh3.googleusercontent.com/d/ID=w200
-    // Prompt says: "ImageID" in sheet.
-
     const imgUrl = mainItem.ImageID ? `https://lh3.googleusercontent.com/d/${mainItem.ImageID}=w200` : 'https://via.placeholder.com/80';
 
     let html = `
@@ -287,20 +276,16 @@ function createItemElement(mainItem, allRoomItems) {
                 <div class="item-price">₪${mainItem.Price ? Number(mainItem.Price).toLocaleString() : '0'}</div>
                 <div class="item-dims">${mainItem.Dim_L || '?'} x ${mainItem.Dim_W || '?'} x ${mainItem.Dim_H || '?'}</div>
             </div>
-            ${mainItem.ProductURL ? `<a href="${mainItem.ProductURL}" target="_blank" class="material-icons-round" style="color:var(--color-secondary); text-decoration:none;">link</a>` : ''}
+            ${mainItem.ProductURL ? `<a href="${mainItem.ProductURL}" target="_blank" class="material-icons-outlined" style="color:var(--color-secondary); text-decoration:none;">link</a>` : ''}
         </div>
     `;
 
     // Alternatives Accordion
-    if (alternatives.length > 0 || true) { // Always show accordion capability? Or only if alts exist?
-        // To allow adding alternatives easily, maybe we need an "Add Alternative" button inside?
-        // PRD says: "Each main item can have Options/Alternatives... displayed in an accordion".
-        // Let's render alts if they exist.
-
+    if (alternatives.length > 0 || true) {
         html += `
             <div class="accordion-header" onclick="toggleAccordion(this)">
                 <span>Alternatives (${alternatives.length})</span>
-                <span class="material-icons-round">expand_more</span>
+                <span class="material-icons-outlined">expand_more</span>
             </div>
             <div class="accordion-body">
                 ${alternatives.map(alt => {
@@ -327,7 +312,7 @@ function createItemElement(mainItem, allRoomItems) {
 
 window.toggleAccordion = function(header) {
     const body = header.nextElementSibling;
-    const icon = header.querySelector('.material-icons-round');
+    const icon = header.querySelector('.material-icons-outlined');
     if (body.classList.contains('open')) {
         body.classList.remove('open');
         icon.textContent = 'expand_more';
@@ -342,8 +327,6 @@ window.toggleAccordion = function(header) {
 // -----------------------------------------------------------------------------
 
 window.swapMainItem = async function(mainId, altId) {
-    // Optimistic UI Update? Or Wait?
-    // Let's find objects
     const mainItem = store.items.find(i => i.ID === mainId);
     const altItem = store.items.find(i => i.ID === altId);
 
@@ -354,30 +337,7 @@ window.swapMainItem = async function(mainId, altId) {
     showToast('Swapping items...');
 
     // 1. Update Local State
-    mainItem.Type = 'Alternative';
-    mainItem.ParentID = altId; // Wait, if we swap, the new main becomes the parent ID for the old main?
-    // Actually, usually ParentID is the ID of the *Current* Main.
-    // So:
-    // Old Main becomes Alternative. Its ParentID -> New Main ID.
-    // New Main (Old Alt) becomes Main. Its ParentID -> Empty.
-    // Siblings (Other Alts) -> Their ParentID must update to New Main ID.
-
     const siblings = store.items.filter(i => i.ParentID === mainId && i.ID !== altId);
-
-    // Updates to send to backend
-    // We need to update: Old Main, New Main, All Siblings.
-    // This is complex for a single API call if not batched.
-    // The backend `updateItem` handles one item.
-    // We might need to make multiple calls or a `batchUpdate` endpoint.
-    // Given the constraints, let's just do it sequentially or (better) add batch support to backend.
-    // But I can't change backend now (I am frontend dev in this turn).
-    // I will loop calls.
-
-    // Logic:
-    // 1. New Main: Type='Main', ParentID=''
-    // 2. Old Main: Type='Alternative', ParentID=NewMain.ID
-    // 3. Siblings: ParentID=NewMain.ID
-
     const newMainId = altItem.ID;
 
     // Local Updates
@@ -402,7 +362,6 @@ window.swapMainItem = async function(mainId, altId) {
         showToast('Swap complete & saved.');
     } catch (e) {
         showToast('Error syncing swap: ' + e.message);
-        // In real app, revert state here
     }
 }
 
@@ -439,9 +398,11 @@ function openAddModal() {
     const modalTitle = els.modals.add.querySelector('h3');
     modalTitle.textContent = isAddingAlternative ? 'Add Alternative Option' : 'Add New Item';
 
-    els.modals.add.classList.add('visible'); // visible class for opacity
-    // Also remove hidden class if using both logic
+    els.modals.add.classList.remove('hidden'); // CRITICAL FIX: remove hidden !important
     els.modals.add.style.display = 'flex'; // Ensure flex
+    // Force reflow
+    els.modals.add.offsetHeight;
+    els.modals.add.classList.add('visible'); // visible class for opacity transition
 }
 
 // Close Modals
@@ -556,9 +517,6 @@ els.validationForm.container.addEventListener('submit', async (e) => {
 
     if (result && result.success) {
         showToast('Item saved!');
-
-        // Add to local store optimistically or re-fetch?
-        // Re-fetching is safer for ID sync.
         await fetchInitialData();
 
         // Close Modal
@@ -579,7 +537,6 @@ els.validationForm.container.addEventListener('submit', async (e) => {
 function setupPanzoom() {
     // Wait for image load
     const img = els.panzoomEl.querySelector('img');
-    // Using Panzoom library
     const pz = Panzoom(els.panzoomEl, {
         maxScale: 5,
         contain: 'outside'
@@ -589,7 +546,7 @@ function setupPanzoom() {
 }
 
 function setupEventListeners() {
-    // Any global listeners
+    // Add any global listeners here if needed
 }
 
 // -----------------------------------------------------------------------------
