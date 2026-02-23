@@ -173,16 +173,8 @@ async function fetchInitialData() {
 
         // Sync floor plan from cloud if available
         if (data.floorPlanImageID) {
-            const cloudUrl = `https://lh3.googleusercontent.com/d/${data.floorPlanImageID}=w2000`;
+            const cloudUrl = `https://drive.google.com/uc?export=view&id=${data.floorPlanImageID}`;
             renderFloorPlan(cloudUrl);
-            // Optionally update local storage to keep offline cache in sync?
-            // For now, cloud takes precedence.
-        } else {
-            // Check local storage for floor plan if cloud is empty
-            const savedFloorPlan = localStorage.getItem('habitat_floorplan');
-            if (savedFloorPlan) {
-                renderFloorPlan(savedFloorPlan);
-            }
         }
 
         renderRoomList();
@@ -641,20 +633,37 @@ function setupFloorPlanUpload() {
             const reader = new FileReader();
             reader.onload = async (evt) => {
                 const base64 = evt.target.result;
-                // Render immediately (local first)
-                renderFloorPlan(base64);
-                localStorage.setItem('habitat_floorplan', base64);
+                // Render immediately (local first) - REMOVED FOR CLOUD SYNC
+                // renderFloorPlan(base64);
+                // localStorage.setItem('habitat_floorplan', base64);
+
+                // Show loading state
+                const originalBtnText = els.floorPlanUpload.btn.textContent;
+                els.floorPlanUpload.btn.textContent = "מעלה...";
+                els.floorPlanUpload.btn.disabled = true;
 
                 showToast('Syncing to cloud...');
-                // Sync to backend
+
                 try {
                     const result = await apiCall('uploadFloorPlan', { base64Image: base64 });
                     if (result && result.success) {
+                        const cloudUrl = `https://drive.google.com/uc?export=view&id=${result.imageID}`;
+                        renderFloorPlan(cloudUrl);
+
+                        // Re-init panzoom logic if needed (or simply replacing content works)
+                        // If we replace the img src, panzoom usually handles it but dimensions might change.
+                        // Best to reset panzoom? For now, render is enough.
+
                         showToast('Floor plan saved to cloud!');
+                    } else {
+                        showToast('Upload failed.');
                     }
                 } catch (err) {
                     console.error('Upload failed', err);
                     showToast('Cloud sync failed.');
+                } finally {
+                    els.floorPlanUpload.btn.textContent = originalBtnText;
+                    els.floorPlanUpload.btn.disabled = false;
                 }
             };
             reader.readAsDataURL(file);
@@ -662,7 +671,7 @@ function setupFloorPlanUpload() {
     });
 }
 
-function renderFloorPlan(base64) {
+function renderFloorPlan(src) {
     // Hide placeholder
     const placeholder = els.panzoomEl.querySelector('.plan-placeholder');
     if (placeholder) {
@@ -679,7 +688,10 @@ function renderFloorPlan(base64) {
         img.style.objectFit = 'contain';
         els.panzoomEl.appendChild(img);
     }
-    img.src = base64;
+    img.src = src;
+
+    // Slight delay to allow image load before panzoom reset/re-init if complex
+    // For simple replacement, this is fine.
 }
 
 function setupEventListeners() {
