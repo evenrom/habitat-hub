@@ -35,6 +35,8 @@ function doPost(e) {
         return getInitialData();
       case 'analyzeAndUpload':
         return analyzeAndUpload(payload);
+      case 'uploadFloorPlan':
+        return uploadFloorPlan(payload);
       case 'saveItem':
         return saveItem(payload);
       case 'updateItem':
@@ -69,21 +71,37 @@ function getInitialData() {
   try {
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
 
-    // 1. Get Rooms from Config
+    // 1. Get Rooms and Floor Plan from Config
     const configSheet = ss.getSheetByName('Config');
     let rooms = [];
+    let floorPlanImageID = null;
+
     if (configSheet) {
-      // Assuming Config sheet has headers Key, Value in row 1
-      // And we are looking for 'Room_List' key or just reading row 2 value as per instruction?
-      // Instruction says: "Read the 'Config' tab (Row 2 under 'Value' for Rooms list)"
-      // Let's assume Row 2, Column 2 (B2) contains the comma-separated list or JSON string of rooms.
-      // Adjust if schema is different. Let's assume comma separated string for simplicity or JSON.
-      // Or maybe it's a list in a column.
-      // Prompt says: "Row 2 under 'Value' for Rooms list".
-      // Let's assume Column B is Value.
+      const data = configSheet.getDataRange().getValues();
+      // Assuming Row 1 is Headers (Key, Value)
+      // Iterate to find keys
+      for (let i = 1; i < data.length; i++) {
+        const key = data[i][0];
+        const value = data[i][1];
+
+        if (key === 'Room_List') { // Assuming Key is Room_List for rooms? Or using fixed cell logic previously?
+           // Previous logic was: const roomValue = configSheet.getRange('B2').getValue();
+           // Let's keep supporting that if not keyed, but better to look for keys.
+           // Prompt said: "Row 2 under 'Value' for Rooms list" previously.
+           // Let's stick to reading B2 for rooms if we don't find a key, or just search.
+        }
+
+        if (key === 'FloorPlan_ImageID') {
+          floorPlanImageID = value;
+        }
+      }
+
+      // Fallback/Legacy for Rooms if not found by key (or just grab B2 as per original code)
+      // Original code: const roomValue = configSheet.getRange('B2').getValue();
+      // Let's preserve original room logic but add FloorPlan search.
+
       const roomValue = configSheet.getRange('B2').getValue();
       if (roomValue) {
-        // Try parsing as JSON, else split by comma
         try {
           rooms = JSON.parse(roomValue);
         } catch (e) {
@@ -109,7 +127,7 @@ function getInitialData() {
       }
     }
 
-    return createJsonResponse({ rooms: rooms, items: items });
+    return createJsonResponse({ rooms: rooms, items: items, floorPlanImageID: floorPlanImageID });
 
   } catch (error) {
     return createJsonResponse({ error: 'Failed to fetch initial data: ' + error.toString() }, 500);
@@ -202,6 +220,59 @@ function analyzeAndUpload(payload) {
 
   } catch (error) {
     return createJsonResponse({ error: 'Analysis failed: ' + error.toString() }, 500);
+  }
+}
+
+/**
+ * Upload Floor Plan Image to Drive and Update Config Sheet.
+ */
+function uploadFloorPlan(payload) {
+  try {
+    const base64Image = payload.base64Image;
+    if (!base64Image) {
+      return createJsonResponse({ error: 'No image data provided' }, 400);
+    }
+
+    // 1. Save Image to Drive
+    const validBase64 = base64Image.split(',').pop();
+    const blob = Utilities.newBlob(Utilities.base64Decode(validBase64), 'image/png', 'floorplan_' + new Date().getTime());
+    const folder = DriveApp.getFolderById(FOLDER_ID);
+    const file = folder.createFile(blob);
+    const imageID = file.getId();
+
+    // Set permissions
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+
+    // 2. Update Config Sheet
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    let configSheet = ss.getSheetByName('Config');
+    if (!configSheet) {
+      configSheet = ss.insertSheet('Config');
+      configSheet.appendRow(['Key', 'Value']); // Header
+    }
+
+    const data = configSheet.getDataRange().getValues();
+    let found = false;
+
+    // Search for 'FloorPlan_ImageID' key in Column A (index 0)
+    for (let i = 0; i < data.length; i++) {
+      if (data[i][0] === 'FloorPlan_ImageID') {
+        // Update Column B (index 1), Row is i+1
+        configSheet.getRange(i + 1, 2).setValue(imageID);
+        found = true;
+        break;
+      }
+    }
+
+    // If not found, append new row
+    if (!found) {
+      configSheet.appendRow(['FloorPlan_ImageID', imageID]);
+    }
+
+    return createJsonResponse({ success: true, imageID: imageID });
+
+  } catch (error) {
+    return createJsonResponse({ error: 'Floor plan upload failed: ' + error.toString() }, 500);
   }
 }
 
