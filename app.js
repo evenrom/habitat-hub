@@ -436,22 +436,34 @@ els.addItemForm.fileInput.addEventListener('change', (e) => {
 });
 
 // Analyze Button
-els.addItemForm.analyzeBtn.addEventListener('click', async () => {
-    if (!store.cropper) return;
-
-    // Get cropped canvas
-    const canvas = store.cropper.getCroppedCanvas({
-        width: 600, // Reasonable size for API
-        height: 600
-    });
-
-    const base64Image = canvas.toDataURL('image/png');
-
-    // Close Add Modal, Open Validation Modal (Loading State)
-    els.modals.add.classList.remove('visible');
-    setTimeout(() => els.modals.add.style.display = 'none', 300);
-
-    openValidationModal(base64Image);
+els.addItemForm.analyzeBtn.addEventListener('click', async (e) => {
+    e.preventDefault(); // CRITICAL: Prevent native form submission
+    console.log("Analyze button clicked.");
+    if (!store.cropper) {
+        alert("מערכת החיתוך לא נטענה. אנא העלה את התמונה מחדש.");
+        return;
+    }
+    try {
+        // Get cropped canvas
+        const canvas = store.cropper.getCroppedCanvas({
+            width: 600,
+            height: 600
+        });
+        if (!canvas) {
+            alert("שגיאה בחיתוך התמונה. נסה שוב.");
+            return;
+        }
+        const base64Image = canvas.toDataURL('image/png');
+        console.log("Image processed, opening validation modal...");
+        // Close Add Modal
+        els.modals.add.classList.remove('visible');
+        setTimeout(() => els.modals.add.style.display = 'none', 300);
+        // Open Validation Modal
+        openValidationModal(base64Image);
+    } catch (error) {
+        console.error("Image processing error:", error);
+        alert("שגיאה פנימית בעיבוד התמונה: " + error.message);
+    }
 });
 
 async function openValidationModal(base64Image) {
