@@ -459,7 +459,7 @@ els.addItemForm.analyzeBtn.addEventListener('click', async (e) => {
         els.modals.add.classList.remove('visible');
         setTimeout(() => els.modals.add.style.display = 'none', 300);
         // Open Validation Modal
-        openValidationModal(base64Image);
+        await openValidationModal(base64Image);
     } catch (error) {
         console.error("Image processing error:", error);
         alert("שגיאה פנימית בעיבוד התמונה: " + error.message);
@@ -467,22 +467,29 @@ els.addItemForm.analyzeBtn.addEventListener('click', async (e) => {
 });
 
 async function openValidationModal(base64Image) {
-    els.modals.validation.style.display = 'flex';
-    // Force reflow
-    els.modals.validation.offsetHeight;
-    els.modals.validation.classList.add('visible');
+    try {
+        els.modals.validation.style.display = 'flex';
+        // Force reflow
+        els.modals.validation.offsetHeight;
+        els.modals.validation.classList.add('visible');
 
-    els.validationForm.loader.classList.remove('hidden');
-    els.validationForm.container.classList.add('hidden');
+        els.validationForm.loader.classList.remove('hidden');
+        els.validationForm.container.classList.add('hidden');
 
-    // Call API
-    const result = await apiCall('analyzeAndUpload', { base64Image: base64Image });
+        console.log("Validation modal opened, calling API...");
+        // Call API
+        const result = await apiCall('analyzeAndUpload', { base64Image: base64Image });
 
-    if (result && result.success) {
-        populateValidationForm(result.extractedData, result.imageID, base64Image);
-    } else {
-        showToast('Analysis failed.');
-        els.modals.validation.classList.remove('visible');
+        if (result && result.success) {
+            populateValidationForm(result.extractedData, result.imageID, base64Image);
+        } else {
+            showToast('Analysis failed.');
+            els.modals.validation.classList.remove('visible');
+        }
+    } catch (error) {
+        console.error("Validation modal error:", error);
+        alert("שגיאה בפתיחת חלונית האימות: " + error.message);
+        els.modals.validation.classList.remove('visible'); // Ensure modal closes on error
     }
 }
 

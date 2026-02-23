@@ -1,23 +1,21 @@
 :root {
   /* Colors - High End Aesthetic */
-  --primary-color: rgb(5, 61, 45); /* Royal Green */
-  --color-secondary: #4169E1; /* Royal Blue - kept for some accents if needed, or replace with primary */
-  --color-accent: #D4AF37; /* Gold */
+  /* Client Palette:
+     Dark Green (Primary): #567357
+     Sage Green (Secondary/Accent): #adab9e
+     Light Background: #dcd8d7
+     Dark Background: #292420
+  */
 
-  --background-light: #FFFFFF;
-  --surface-light: #F8F9FA;
-  --text-light: #333333;
+  --primary-color: #567357;
+  --color-secondary: #adab9e;
+  --color-accent: #adab9e; /* Mapping accent to secondary/sage */
 
-  --background-dark: rgb(32, 22, 18); /* Deep Warm Black */
-  --surface-dark: rgba(32, 22, 18, 0.9);
-  --text-dark: #E0E0E0;
+  --color-bg: #dcd8d7;
+  --color-text: #292420;
+  --color-surface: #ffffff;
 
-  --color-border: #E0E0E0;
-
-  /* Current Theme Vars (Default Light) */
-  --color-bg: var(--background-light);
-  --color-text: var(--text-light);
-  --color-surface: var(--surface-light);
+  --color-border: rgba(41, 36, 32, 0.2); /* Derived from dark text */
 
   /* Font */
   --font-family: 'Assistant', 'Rubik', sans-serif;
@@ -35,11 +33,13 @@
 }
 
 [data-theme='dark'] {
-  --color-bg: var(--background-dark);
-  --color-text: var(--text-dark);
-  --color-surface: #2C241E; /* Slightly lighter than bg for cards */
-  --color-border: #443C36;
-  --color-secondary: #64B5F6; /* Lighter Blue */
+  --color-bg: #292420;
+  --color-text: #dcd8d7;
+  --color-surface: #38322d;
+  --color-border: rgba(220, 216, 215, 0.2);
+  --primary-color: #567357; /* Keep primary consistent or adjust if needed */
+  --color-secondary: #adab9e;
+  --color-accent: #adab9e;
 }
 
 /* Reset & Base */
@@ -370,7 +370,7 @@ body {
 
 /* Budget View */
 .budget-card {
-  background: linear-gradient(135deg, var(--primary-color), #084a36);
+  background: linear-gradient(135deg, var(--primary-color), #3d523e); /* Darker green gradient */
   color: white;
   padding: var(--space-xl);
   border-radius: 16px;
