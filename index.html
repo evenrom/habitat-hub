@@ -22,8 +22,8 @@
     <!-- App Styles -->
     <link rel="stylesheet" href="styles.css">
 
-    <!-- PWA Manifest (Placeholder) -->
-    <!-- <link rel="manifest" href="manifest.json"> -->
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
 </head>
 <body>
     <div id="app">
@@ -200,6 +200,24 @@
 
                         <button type="submit" id="btn-save-item" class="btn-primary">Approve & Save</button>
                     </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: ITEM DETAILS LIGHTBOX -->
+        <div id="modal-item-details" class="modal hidden">
+            <div class="modal-content lightbox-content">
+                <button class="close-modal lightbox-close" aria-label="Close">
+                    <span class="material-icons-outlined">close</span>
+                </button>
+                <div class="lightbox-img-container">
+                    <img id="detail-img" src="" alt="Item Detail">
+                </div>
+                <div class="lightbox-info">
+                    <h2 id="detail-name">Item Name</h2>
+                    <p class="detail-price" id="detail-price">₪0</p>
+                    <p class="detail-dims" id="detail-dims">L x W x H</p>
+                    <a href="#" id="detail-link" target="_blank" class="btn-primary">View Product</a>
                 </div>
             </div>
         </div>

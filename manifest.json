@@ -1,0 +1,15 @@
+{
+  "name": "Habitat Hub",
+  "short_name": "Habitat",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#292420",
+  "theme_color": "#567357",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512"
+    }
+  ]
+}

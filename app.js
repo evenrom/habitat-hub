@@ -46,7 +46,15 @@ const els = {
     fabAdd: document.getElementById('fab-add-item'),
     modals: {
         add: document.getElementById('modal-add-item'),
-        validation: document.getElementById('modal-validation')
+        validation: document.getElementById('modal-validation'),
+        details: document.getElementById('modal-item-details')
+    },
+    detailModal: {
+        img: document.getElementById('detail-img'),
+        name: document.getElementById('detail-name'),
+        price: document.getElementById('detail-price'),
+        dims: document.getElementById('detail-dims'),
+        link: document.getElementById('detail-link')
     },
     addItemForm: {
         form: document.getElementById('add-item-form'),
@@ -89,10 +97,11 @@ async function init() {
     setupEventListeners();
     setupFloorPlanUpload(); // Setup Upload Logic
 
-    // Check local storage for floor plan
-    const savedFloorPlan = localStorage.getItem('habitat_floorplan');
-    if (savedFloorPlan) {
-        renderFloorPlan(savedFloorPlan);
+    // PWA Service Worker Registration
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js')
+            .then(reg => console.log('SW Registered', reg))
+            .catch(err => console.error('SW Registration failed', err));
     }
 
     // Initial Data Fetch
@@ -161,6 +170,21 @@ async function fetchInitialData() {
     if (data) {
         store.rooms = data.rooms || [];
         store.items = data.items || [];
+
+        // Sync floor plan from cloud if available
+        if (data.floorPlanImageID) {
+            const cloudUrl = `https://lh3.googleusercontent.com/d/${data.floorPlanImageID}=w2000`;
+            renderFloorPlan(cloudUrl);
+            // Optionally update local storage to keep offline cache in sync?
+            // For now, cloud takes precedence.
+        } else {
+            // Check local storage for floor plan if cloud is empty
+            const savedFloorPlan = localStorage.getItem('habitat_floorplan');
+            if (savedFloorPlan) {
+                renderFloorPlan(savedFloorPlan);
+            }
+        }
+
         renderRoomList();
         renderBudget();
     }
@@ -279,10 +303,11 @@ function createItemElement(mainItem, allRoomItems) {
     div.className = 'item-card';
 
     const imgUrl = mainItem.ImageID ? `https://lh3.googleusercontent.com/d/${mainItem.ImageID}=w200` : 'https://via.placeholder.com/80';
+    const mainItemJSON = encodeURIComponent(JSON.stringify(mainItem));
 
     let html = `
         <div class="item-main">
-            <img src="${imgUrl}" class="item-img" alt="${mainItem.Name}">
+            <img src="${imgUrl}" class="item-img" alt="${mainItem.Name}" onclick="openItemDetails('${mainItemJSON}')">
             <div class="item-info">
                 <div class="item-title">${mainItem.Name}</div>
                 <div class="item-price">₪${mainItem.Price ? Number(mainItem.Price).toLocaleString() : '0'}</div>
@@ -302,9 +327,10 @@ function createItemElement(mainItem, allRoomItems) {
             <div class="accordion-body">
                 ${alternatives.map(alt => {
                     const altImg = alt.ImageID ? `https://lh3.googleusercontent.com/d/${alt.ImageID}=w80` : 'https://via.placeholder.com/40';
+                    const altItemJSON = encodeURIComponent(JSON.stringify(alt));
                     return `
                     <div class="alt-item">
-                        <img src="${altImg}" style="width:40px;height:40px;border-radius:4px;margin-right:8px;object-fit:cover;">
+                        <img src="${altImg}" style="width:40px;height:40px;border-radius:4px;margin-right:8px;object-fit:cover;" onclick="openItemDetails('${altItemJSON}')">
                         <div style="flex:1;">
                             <div style="font-size:0.9rem;font-weight:600;">${alt.Name}</div>
                             <div style="font-size:0.8rem;">₪${Number(alt.Price).toLocaleString()}</div>
@@ -320,6 +346,28 @@ function createItemElement(mainItem, allRoomItems) {
 
     div.innerHTML = html;
     return div;
+}
+
+window.openItemDetails = function(itemJson) {
+    const item = JSON.parse(decodeURIComponent(itemJson));
+    const imgUrl = item.ImageID ? `https://lh3.googleusercontent.com/d/${item.ImageID}=w1000` : 'https://via.placeholder.com/600';
+
+    els.detailModal.img.src = imgUrl;
+    els.detailModal.name.textContent = item.Name;
+    els.detailModal.price.textContent = '₪' + Number(item.Price).toLocaleString();
+    els.detailModal.dims.textContent = `${item.Dim_L || '?'} x ${item.Dim_W || '?'} x ${item.Dim_H || '?'} cm`;
+
+    if (item.ProductURL) {
+        els.detailModal.link.href = item.ProductURL;
+        els.detailModal.link.style.display = 'inline-flex';
+    } else {
+        els.detailModal.link.style.display = 'none';
+    }
+
+    els.modals.details.classList.remove('hidden');
+    els.modals.details.style.display = 'flex';
+    els.modals.details.offsetHeight;
+    els.modals.details.classList.add('visible');
 }
 
 window.toggleAccordion = function(header) {
@@ -591,11 +639,23 @@ function setupFloorPlanUpload() {
         const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();
-            reader.onload = (evt) => {
+            reader.onload = async (evt) => {
                 const base64 = evt.target.result;
-                localStorage.setItem('habitat_floorplan', base64);
+                // Render immediately (local first)
                 renderFloorPlan(base64);
-                showToast('Floor plan updated!');
+                localStorage.setItem('habitat_floorplan', base64);
+
+                showToast('Syncing to cloud...');
+                // Sync to backend
+                try {
+                    const result = await apiCall('uploadFloorPlan', { base64Image: base64 });
+                    if (result && result.success) {
+                        showToast('Floor plan saved to cloud!');
+                    }
+                } catch (err) {
+                    console.error('Upload failed', err);
+                    showToast('Cloud sync failed.');
+                }
             };
             reader.readAsDataURL(file);
         }
