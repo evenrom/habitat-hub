@@ -71,7 +71,11 @@ const els = {
     },
     budgetTotal: document.getElementById('budget-total'),
     budgetList: document.getElementById('budget-list-container'),
-    panzoomEl: document.getElementById('panzoom-element')
+    panzoomEl: document.getElementById('panzoom-element'),
+    floorPlanUpload: {
+        btn: document.getElementById('btn-upload-floorplan'),
+        input: document.getElementById('floorplan-upload-input')
+    }
 };
 
 // -----------------------------------------------------------------------------
@@ -83,6 +87,13 @@ async function init() {
     setupNavigation();
     setupPanzoom();
     setupEventListeners();
+    setupFloorPlanUpload(); // Setup Upload Logic
+
+    // Check local storage for floor plan
+    const savedFloorPlan = localStorage.getItem('habitat_floorplan');
+    if (savedFloorPlan) {
+        renderFloorPlan(savedFloorPlan);
+    }
 
     // Initial Data Fetch
     await fetchInitialData();
@@ -454,19 +465,21 @@ els.addItemForm.analyzeBtn.addEventListener('click', async (e) => {
             return;
         }
         const base64Image = canvas.toDataURL('image/png');
+        const fullBase64Image = els.addItemForm.imgToCrop.src; // Capture full image
+
         console.log("Image processed, opening validation modal...");
         // Close Add Modal
         els.modals.add.classList.remove('visible');
         setTimeout(() => els.modals.add.style.display = 'none', 300);
         // Open Validation Modal
-        await openValidationModal(base64Image);
+        await openValidationModal(base64Image, fullBase64Image);
     } catch (error) {
         console.error("Image processing error:", error);
         alert("שגיאה פנימית בעיבוד התמונה: " + error.message);
     }
 });
 
-async function openValidationModal(base64Image) {
+async function openValidationModal(base64Image, fullBase64Image) {
     try {
         els.modals.validation.classList.remove('hidden'); // CRITICAL: Ensure modal is visible
         els.modals.validation.style.display = 'flex';
@@ -479,7 +492,7 @@ async function openValidationModal(base64Image) {
 
         console.log("Validation modal opened, calling API...");
         // Call API
-        const result = await apiCall('analyzeAndUpload', { base64Image: base64Image });
+        const result = await apiCall('analyzeAndUpload', { base64Image: base64Image, fullBase64Image: fullBase64Image });
 
         if (result && result.success) {
             populateValidationForm(result.extractedData, result.imageID, base64Image);
@@ -556,14 +569,57 @@ els.validationForm.container.addEventListener('submit', async (e) => {
 // -----------------------------------------------------------------------------
 
 function setupPanzoom() {
-    // Wait for image load
-    const img = els.panzoomEl.querySelector('img');
+    // Note: Panzoom needs to be re-initialized if the element content changes entirely?
+    // Or we keep the element and change content.
+    // The library targets els.panzoomEl.
     const pz = Panzoom(els.panzoomEl, {
         maxScale: 5,
         contain: 'outside'
     });
 
     els.panzoomEl.parentElement.addEventListener('wheel', pz.zoomWithWheel);
+}
+
+function setupFloorPlanUpload() {
+    if (!els.floorPlanUpload.btn || !els.floorPlanUpload.input) return;
+
+    els.floorPlanUpload.btn.addEventListener('click', () => {
+        els.floorPlanUpload.input.click();
+    });
+
+    els.floorPlanUpload.input.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                const base64 = evt.target.result;
+                localStorage.setItem('habitat_floorplan', base64);
+                renderFloorPlan(base64);
+                showToast('Floor plan updated!');
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+function renderFloorPlan(base64) {
+    // Hide placeholder
+    const placeholder = els.panzoomEl.querySelector('.plan-placeholder');
+    if (placeholder) {
+        placeholder.style.display = 'none';
+    }
+
+    // Check if img exists, otherwise create it
+    let img = els.panzoomEl.querySelector('img');
+    if (!img) {
+        img = document.createElement('img');
+        img.id = 'floorplan-img';
+        img.style.maxWidth = '100%';
+        img.style.maxHeight = '100%';
+        img.style.objectFit = 'contain';
+        els.panzoomEl.appendChild(img);
+    }
+    img.src = base64;
 }
 
 function setupEventListeners() {

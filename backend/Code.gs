@@ -129,7 +129,7 @@ function analyzeAndUpload(payload) {
       return createJsonResponse({ error: 'No image data provided' }, 400);
     }
 
-    // 1. Save Image to Drive
+    // 1. Save Image to Drive (Always use the cropped image)
     // Remove header if present (e.g., "data:image/png;base64,")
     const validBase64 = base64Image.split(',').pop();
     const blob = Utilities.newBlob(Utilities.base64Decode(validBase64), 'image/png', 'furniture_upload_' + new Date().getTime()); // Defaulting to png, can be dynamic
@@ -147,6 +147,10 @@ function analyzeAndUpload(payload) {
 
     const promptText = "Analyze this furniture image. Extract: Name, Price (numbers only), Dimensions (Length, Width, Height). Return STRICTLY a valid JSON object with keys: name, price, dim_l, dim_w, dim_h, image_analysis. If a dimension is unknown, use 'Unknown'.";
 
+    // Use fullBase64Image if provided (for better context), otherwise fallback to base64Image
+    const imageForAnalysis = payload.fullBase64Image || base64Image;
+    const validAnalysisBase64 = imageForAnalysis.split(',').pop();
+
     const requestBody = {
       contents: [
         {
@@ -155,7 +159,7 @@ function analyzeAndUpload(payload) {
             {
               inline_data: {
                 mime_type: "image/png", // Assuming png from the blob creation above
-                data: validBase64
+                data: validAnalysisBase64
               }
             }
           ]
