@@ -426,7 +426,7 @@ els.addItemForm.fileInput.addEventListener('change', (e) => {
 
             if (store.cropper) store.cropper.destroy();
             store.cropper = new Cropper(els.addItemForm.imgToCrop, {
-                aspectRatio: NaN, // Free crop
+                aspectRatio: 1, // MUST BE 1 FOR SQUARE CROP
                 viewMode: 1,
             });
             els.addItemForm.analyzeBtn.disabled = false;
@@ -468,6 +468,7 @@ els.addItemForm.analyzeBtn.addEventListener('click', async (e) => {
 
 async function openValidationModal(base64Image) {
     try {
+        els.modals.validation.classList.remove('hidden'); // CRITICAL: Ensure modal is visible
         els.modals.validation.style.display = 'flex';
         // Force reflow
         els.modals.validation.offsetHeight;
