@@ -173,7 +173,7 @@ async function fetchInitialData() {
 
         // Sync floor plan from cloud if available
         if (data.floorPlanImageID) {
-            const cloudUrl = `https://drive.google.com/uc?export=view&id=${data.floorPlanImageID}`;
+            const cloudUrl = `https://drive.google.com/thumbnail?id=${data.floorPlanImageID}&sz=w2000`;
             renderFloorPlan(cloudUrl);
         }
 
@@ -647,7 +647,7 @@ function setupFloorPlanUpload() {
                 try {
                     const result = await apiCall('uploadFloorPlan', { base64Image: base64 });
                     if (result && result.success) {
-                        const cloudUrl = `https://drive.google.com/uc?export=view&id=${result.imageID}`;
+                        const cloudUrl = `https://drive.google.com/thumbnail?id=${result.imageID}&sz=w2000`;
                         renderFloorPlan(cloudUrl);
 
                         // Re-init panzoom logic if needed (or simply replacing content works)
