@@ -697,31 +697,31 @@ function renderFloorPlan(src) {
 
 function setupClipboardPaste() {
     document.addEventListener('paste', (e) => {
-        // Check if Add Item modal is visible
-        if (els.modals.add.style.display !== 'flex') return;
-
+        // More reliable check for modal visibility
+        if (!els.modals.add.classList.contains('visible')) return;
         const items = (e.clipboardData || e.originalEvent.clipboardData).items;
         let blob = null;
-
         for (let i = 0; i < items.length; i++) {
             if (items[i].type.indexOf('image') !== -1) {
                 blob = items[i].getAsFile();
                 break;
             }
         }
-
         if (blob) {
-            // Create a File object from blob if needed, or just use blob
-            // The fileInput expects a FileList. We can mock it using DataTransfer.
-            const dataTransfer = new DataTransfer();
-            dataTransfer.items.add(blob);
-            els.addItemForm.fileInput.files = dataTransfer.files;
-
-            // Manually trigger change event
-            const event = new Event('change', { bubbles: true });
-            els.addItemForm.fileInput.dispatchEvent(event);
-
-            showToast('Image pasted from clipboard');
+            // Bypass the file input completely. Process the Blob directly.
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                els.addItemForm.imgToCrop.src = evt.target.result;
+                els.addItemForm.cropperContainer.classList.remove('hidden');
+                if (store.cropper) store.cropper.destroy();
+                store.cropper = new Cropper(els.addItemForm.imgToCrop, {
+                    aspectRatio: 1, // Strict 1:1 ratio
+                    viewMode: 1,
+                });
+                els.addItemForm.analyzeBtn.disabled = false;
+                showToast('Image pasted from clipboard!');
+            };
+            reader.readAsDataURL(blob);
         }
     });
 }
