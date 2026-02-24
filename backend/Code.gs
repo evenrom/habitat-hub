@@ -78,17 +78,20 @@ function getInitialData() {
 
     if (configSheet) {
       const data = configSheet.getDataRange().getValues();
-      // Assuming Row 1 is Headers (Key, Value)
-      // Iterate to find keys
-      for (let i = 1; i < data.length; i++) {
+      // Loop through all data to find dynamic keys
+      for (let i = 0; i < data.length; i++) {
         const key = data[i][0];
         const value = data[i][1];
 
-        if (key === 'Room_List') { // Assuming Key is Room_List for rooms? Or using fixed cell logic previously?
-           // Previous logic was: const roomValue = configSheet.getRange('B2').getValue();
-           // Let's keep supporting that if not keyed, but better to look for keys.
-           // Prompt said: "Row 2 under 'Value' for Rooms list" previously.
-           // Let's stick to reading B2 for rooms if we don't find a key, or just search.
+        if (key === 'Room_List' || key === 'Rooms') {
+          // Parse rooms array
+          if (value) {
+            try {
+              rooms = JSON.parse(value);
+            } catch (e) {
+              rooms = value.split(',').map(r => r.trim());
+            }
+          }
         }
 
         if (key === 'FloorPlan_ImageID') {
@@ -96,17 +99,17 @@ function getInitialData() {
         }
       }
 
-      // Fallback/Legacy for Rooms if not found by key (or just grab B2 as per original code)
-      // Original code: const roomValue = configSheet.getRange('B2').getValue();
-      // Let's preserve original room logic but add FloorPlan search.
-
-      const roomValue = configSheet.getRange('B2').getValue();
-      if (roomValue) {
-        try {
-          rooms = JSON.parse(roomValue);
-        } catch (e) {
-          rooms = roomValue.split(',').map(r => r.trim());
-        }
+      // Fallback: If rooms is still empty, check B2 explicitly if not caught above
+      if (rooms.length === 0 && data.length > 1 && data[1][1]) {
+         const legacyValue = data[1][1];
+         try {
+            rooms = JSON.parse(legacyValue);
+         } catch (e) {
+            // Only split if looks like a string list
+            if (typeof legacyValue === 'string') {
+                rooms = legacyValue.split(',').map(r => r.trim());
+            }
+         }
       }
     }
 
