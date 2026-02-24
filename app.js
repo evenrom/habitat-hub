@@ -96,6 +96,7 @@ async function init() {
     setupPanzoom();
     setupEventListeners();
     setupFloorPlanUpload(); // Setup Upload Logic
+    setupClipboardPaste(); // Setup Clipboard Paste Logic
 
     // PWA Service Worker Registration
     if ('serviceWorker' in navigator) {
@@ -692,6 +693,37 @@ function renderFloorPlan(src) {
 
     // Slight delay to allow image load before panzoom reset/re-init if complex
     // For simple replacement, this is fine.
+}
+
+function setupClipboardPaste() {
+    document.addEventListener('paste', (e) => {
+        // Check if Add Item modal is visible
+        if (els.modals.add.style.display !== 'flex') return;
+
+        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        let blob = null;
+
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf('image') !== -1) {
+                blob = items[i].getAsFile();
+                break;
+            }
+        }
+
+        if (blob) {
+            // Create a File object from blob if needed, or just use blob
+            // The fileInput expects a FileList. We can mock it using DataTransfer.
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(blob);
+            els.addItemForm.fileInput.files = dataTransfer.files;
+
+            // Manually trigger change event
+            const event = new Event('change', { bubbles: true });
+            els.addItemForm.fileInput.dispatchEvent(event);
+
+            showToast('Image pasted from clipboard');
+        }
+    });
 }
 
 function setupEventListeners() {
