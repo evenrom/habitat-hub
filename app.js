@@ -23,6 +23,7 @@ const store = {
     rooms: [], // ['Kitchen', 'Living Room'...]
     items: [], // [{ id, room, type, name, price... }]
     currentRoom: null,
+    viewMode: 'Room', // 'Room' or 'Store'
     cropper: null,
     tempImageBlob: null,
     tempAnalysisData: null
@@ -205,6 +206,27 @@ function setupNavigation() {
         switchView('view-rooms');
         store.currentRoom = null;
     });
+
+    // View Toggles
+    const toggleBtns = document.querySelectorAll('.toggle-btn');
+    toggleBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const mode = e.target.getAttribute('data-view');
+            store.viewMode = mode;
+
+            // Update active state on ALL toggle buttons
+            document.querySelectorAll('.toggle-btn').forEach(b => {
+                if (b.getAttribute('data-view') === mode) {
+                    b.classList.add('active');
+                } else {
+                    b.classList.remove('active');
+                }
+            });
+
+            renderRoomList();
+            renderBudget();
+        });
+    });
 }
 
 function switchView(viewId) {
@@ -240,42 +262,76 @@ function switchView(viewId) {
 function renderRoomList() {
     els.roomList.innerHTML = '';
 
-    if (store.rooms.length === 0) {
-        els.roomList.innerHTML = '<p>No rooms found.</p>';
-        return;
+    if (store.viewMode === 'Room') {
+        if (store.rooms.length === 0) {
+            els.roomList.innerHTML = '<p>No rooms found.</p>';
+            return;
+        }
+
+        store.rooms.forEach(roomName => {
+            const card = document.createElement('div');
+            card.className = 'room-card';
+            const iconName = ROOM_ICONS[roomName] || DEFAULT_ROOM_ICON;
+
+            card.innerHTML = `
+                <div class="room-icon"><span class="material-icons-outlined">${iconName}</span></div>
+                <h3>${roomName}</h3>
+                <p class="count">${countItemsInRoom(roomName)} Items</p>
+            `;
+            card.addEventListener('click', () => openRoomDetail(roomName));
+            els.roomList.appendChild(card);
+        });
+    } else if (store.viewMode === 'Store') {
+        // Extract unique stores
+        const stores = [...new Set(store.items.filter(i => i.Type === 'Main' && i.Store).map(i => i.Store))];
+
+        if (stores.length === 0) {
+            els.roomList.innerHTML = '<p>No stores found.</p>';
+            return;
+        }
+
+        stores.forEach(storeName => {
+            const card = document.createElement('div');
+            card.className = 'room-card';
+            const iconName = 'storefront';
+
+            card.innerHTML = `
+                <div class="room-icon"><span class="material-icons-outlined">${iconName}</span></div>
+                <h3>${storeName}</h3>
+                <p class="count">${countItemsInStore(storeName)} Items</p>
+            `;
+            card.addEventListener('click', () => openRoomDetail(storeName));
+            els.roomList.appendChild(card);
+        });
     }
-
-    store.rooms.forEach(roomName => {
-        const card = document.createElement('div');
-        card.className = 'room-card';
-        const iconName = ROOM_ICONS[roomName] || DEFAULT_ROOM_ICON;
-
-        card.innerHTML = `
-            <div class="room-icon"><span class="material-icons-outlined">${iconName}</span></div>
-            <h3>${roomName}</h3>
-            <p class="count">${countItemsInRoom(roomName)} Items</p>
-        `;
-        card.addEventListener('click', () => openRoomDetail(roomName));
-        els.roomList.appendChild(card);
-    });
 }
 
 function countItemsInRoom(roomName) {
     return store.items.filter(i => i.Room === roomName && i.Type === 'Main').length;
 }
 
-function openRoomDetail(roomName) {
-    store.currentRoom = roomName;
-    els.roomDetailName.textContent = roomName;
-    renderRoomItems(roomName);
+function countItemsInStore(storeName) {
+    return store.items.filter(i => i.Store === storeName && i.Type === 'Main').length;
+}
+
+function openRoomDetail(identifier) {
+    store.currentRoom = identifier;
+    els.roomDetailName.textContent = identifier;
+    renderRoomItems(identifier);
     switchView('view-room-detail');
 }
 
-function renderRoomItems(roomName) {
+function renderRoomItems(identifier) {
     const container = els.roomItemsList;
     container.innerHTML = '';
 
-    const roomItems = store.items.filter(i => i.Room === roomName);
+    let roomItems = [];
+    if (store.viewMode === 'Room') {
+        roomItems = store.items.filter(i => i.Room === identifier);
+    } else {
+        roomItems = store.items.filter(i => i.Store === identifier);
+    }
+
     const mainItems = roomItems.filter(i => i.Type === 'Main');
 
     if (mainItems.length === 0) {
@@ -302,7 +358,10 @@ function createItemElement(mainItem, allRoomItems) {
         <div class="item-main">
             <img src="${imgUrl}" class="item-img" alt="${mainItem.Name}" onclick="openItemDetails('${mainItemJSON}')">
             <div class="item-info">
-                <div class="item-title">${mainItem.Name}</div>
+                <div class="item-title">
+                    ${mainItem.Name}
+                    ${store.viewMode === 'Store' && mainItem.Room ? `<span class="room-badge">${mainItem.Room}</span>` : ''}
+                </div>
                 <div class="item-price">₪${mainItem.Price ? Number(mainItem.Price).toLocaleString() : '0'}</div>
                 <div class="item-dims">${mainItem.Dim_L || '?'} x ${mainItem.Dim_W || '?'} x ${mainItem.Dim_H || '?'}</div>
             </div>
@@ -507,20 +566,21 @@ els.addItemForm.analyzeBtn.addEventListener('click', async (e) => {
         }
         const base64Image = canvas.toDataURL('image/png');
         const fullBase64Image = els.addItemForm.imgToCrop.src; // Capture full image
+        const url = els.addItemForm.url.value;
 
         console.log("Image processed, opening validation modal...");
         // Close Add Modal
         els.modals.add.classList.remove('visible');
         setTimeout(() => els.modals.add.style.display = 'none', 300);
         // Open Validation Modal
-        await openValidationModal(base64Image, fullBase64Image);
+        await openValidationModal(base64Image, fullBase64Image, url);
     } catch (error) {
         console.error("Image processing error:", error);
         alert("שגיאה פנימית בעיבוד התמונה: " + error.message);
     }
 });
 
-async function openValidationModal(base64Image, fullBase64Image) {
+async function openValidationModal(base64Image, fullBase64Image, url) {
     try {
         els.modals.validation.classList.remove('hidden'); // CRITICAL: Ensure modal is visible
         els.modals.validation.style.display = 'flex';
@@ -533,7 +593,7 @@ async function openValidationModal(base64Image, fullBase64Image) {
 
         console.log("Validation modal opened, calling API...");
         // Call API
-        const result = await apiCall('analyzeAndUpload', { base64Image: base64Image, fullBase64Image: fullBase64Image });
+        const result = await apiCall('analyzeAndUpload', { base64Image: base64Image, fullBase64Image: fullBase64Image, productURL: url });
 
         if (result && result.success) {
             populateValidationForm(result.extractedData, result.imageID, base64Image);
@@ -557,6 +617,7 @@ function populateValidationForm(data, imageID, previewBase64) {
     // Pre-fill
     els.validationForm.name.value = data.name || els.addItemForm.title.value || '';
     els.validationForm.price.value = data.price || '';
+    document.getElementById('val-store').value = data.store || '';
     els.validationForm.dimL.value = data.dim_l || '';
     els.validationForm.dimW.value = data.dim_w || '';
     els.validationForm.dimH.value = data.dim_h || '';
@@ -578,6 +639,7 @@ els.validationForm.container.addEventListener('submit', async (e) => {
         type: isAddingAlternative ? 'Alternative' : 'Main',
         parentID: targetParentId || '',
         name: els.validationForm.name.value,
+        store: document.getElementById('val-store').value,
         price: Number(els.validationForm.price.value),
         dim_l: els.validationForm.dimL.value,
         dim_w: els.validationForm.dimW.value,
@@ -743,19 +805,42 @@ function renderBudget() {
     // Breakdown
     els.budgetList.innerHTML = '';
 
-    store.rooms.forEach(room => {
-        const roomTotal = store.items
-            .filter(i => i.Room === room && i.Type === 'Main')
-            .reduce((sum, item) => sum + (Number(item.Price) || 0), 0);
+    // Update breakdown title
+    const breakdownTitle = document.querySelector('.budget-breakdown h3');
+    if (breakdownTitle) {
+        breakdownTitle.textContent = store.viewMode === 'Room' ? 'Breakdown by Room' : 'Breakdown by Store';
+    }
 
-        const row = document.createElement('div');
-        row.className = 'budget-row';
-        row.innerHTML = `
-            <span class="room-name">${room}</span>
-            <span>₪${roomTotal.toLocaleString()}</span>
-        `;
-        els.budgetList.appendChild(row);
-    });
+    if (store.viewMode === 'Room') {
+        store.rooms.forEach(room => {
+            const roomTotal = store.items
+                .filter(i => i.Room === room && i.Type === 'Main')
+                .reduce((sum, item) => sum + (Number(item.Price) || 0), 0);
+
+            const row = document.createElement('div');
+            row.className = 'budget-row';
+            row.innerHTML = `
+                <span class="room-name">${room}</span>
+                <span>₪${roomTotal.toLocaleString()}</span>
+            `;
+            els.budgetList.appendChild(row);
+        });
+    } else if (store.viewMode === 'Store') {
+        const stores = [...new Set(store.items.filter(i => i.Type === 'Main' && i.Store).map(i => i.Store))];
+        stores.forEach(storeName => {
+            const storeTotal = store.items
+                .filter(i => i.Store === storeName && i.Type === 'Main')
+                .reduce((sum, item) => sum + (Number(item.Price) || 0), 0);
+
+            const row = document.createElement('div');
+            row.className = 'budget-row';
+            row.innerHTML = `
+                <span class="room-name">${storeName}</span>
+                <span>₪${storeTotal.toLocaleString()}</span>
+            `;
+            els.budgetList.appendChild(row);
+        });
+    }
 }
 
 // -----------------------------------------------------------------------------
