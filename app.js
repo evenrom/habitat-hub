@@ -378,7 +378,11 @@ function createItemElement(mainItem, allRoomItems) {
                 <div class="item-price">₪${mainItem.Price ? Number(mainItem.Price).toLocaleString() : '0'}</div>
                 <div class="item-dims">${mainItem.Dim_L || '?'} x ${mainItem.Dim_W || '?'} x ${mainItem.Dim_H || '?'}</div>
             </div>
-            ${mainItem.ProductURL ? `<a href="${mainItem.ProductURL}" target="_blank" class="material-icons-outlined" style="color:var(--color-secondary); text-decoration:none;">link</a>` : ''}
+            ${mainItem.ProductURL ? `<a href="${mainItem.ProductURL}" target="_blank" class="material-icons-outlined" style="color:var(--color-secondary); text-decoration:none; margin-right: 16px;">link</a>` : ''}
+            <label class="custom-checkbox" onclick="event.stopPropagation();">
+                <input type="checkbox" onchange="toggleQuickPurchase('${mainItem.ID}', this.checked)" ${isPurchased ? 'checked' : ''}>
+                <span class="checkmark"></span>
+            </label>
         </div>
     `;
 
@@ -456,8 +460,29 @@ window.toggleAccordion = function(header) {
 }
 
 // -----------------------------------------------------------------------------
-// Logic: Swap Main & Alternative
+// Logic: Purchase & Swap
 // -----------------------------------------------------------------------------
+
+window.toggleQuickPurchase = async function(id, isChecked) {
+    const item = store.items.find(i => i.ID === id);
+    if (!item) return;
+
+    // Optimistic State Update
+    item.Purchased = isChecked ? 'TRUE' : 'FALSE';
+    item.ActualPrice = item.ActualPrice || item.Price; // Assume full price on quick check
+
+    // Instantly update UI
+    renderRoomItems(store.currentRoom);
+    renderBudget();
+
+    // Sync with Backend
+    try {
+        await apiCall('updateItem', { item: { id: id, purchased: isChecked ? 'TRUE' : 'FALSE', actualPrice: item.ActualPrice } });
+    } catch (e) {
+        showToast('Sync failed, please try again.');
+        // Revert optimistic update on failure could be done here if needed
+    }
+}
 
 window.swapMainItem = async function(mainId, altId) {
     const mainItem = store.items.find(i => i.ID === mainId);
