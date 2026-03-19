@@ -23,6 +23,7 @@ const store = {
     rooms: [], // ['Kitchen', 'Living Room'...]
     items: [], // [{ id, room, type, name, price... }]
     currentRoom: null,
+    currentViewedItem: null,
     viewMode: 'Room', // 'Room' or 'Store'
     cropper: null,
     tempImageBlob: null,
@@ -55,7 +56,11 @@ const els = {
         name: document.getElementById('detail-name'),
         price: document.getElementById('detail-price'),
         dims: document.getElementById('detail-dims'),
-        link: document.getElementById('detail-link')
+        link: document.getElementById('detail-link'),
+        purchasedCb: document.getElementById('detail-purchased-cb'),
+        actualPriceGroup: document.getElementById('detail-actual-price-group'),
+        actualPrice: document.getElementById('detail-actual-price'),
+        btnSavePurchase: document.getElementById('btn-save-purchase')
     },
     addItemForm: {
         form: document.getElementById('add-item-form'),
@@ -79,6 +84,8 @@ const els = {
         saveBtn: document.getElementById('btn-save-item')
     },
     budgetTotal: document.getElementById('budget-total'),
+    budgetSpent: document.getElementById('budget-spent'),
+    budgetRemaining: document.getElementById('budget-remaining'),
     budgetList: document.getElementById('budget-list-container'),
     panzoomEl: document.getElementById('panzoom-element'),
     floorPlanUpload: {
@@ -354,9 +361,15 @@ function createItemElement(mainItem, allRoomItems) {
     const imgUrl = mainItem.ImageID ? `https://lh3.googleusercontent.com/d/${mainItem.ImageID}=w200` : 'https://via.placeholder.com/80';
     const mainItemJSON = encodeURIComponent(JSON.stringify(mainItem));
 
+    const isPurchased = String(mainItem.Purchased).toLowerCase() === 'true';
+    const purchasedClass = isPurchased ? 'is-purchased' : '';
+
     let html = `
-        <div class="item-main">
-            <img src="${imgUrl}" class="item-img" alt="${mainItem.Name}" onclick="openItemDetails('${mainItemJSON}')">
+        <div class="item-main ${purchasedClass}">
+            <div class="item-img-wrapper">
+                <img src="${imgUrl}" class="item-img" alt="${mainItem.Name}" onclick="openItemDetails('${mainItemJSON}')">
+                ${isPurchased ? '<span class="purchased-badge">✓</span>' : ''}
+            </div>
             <div class="item-info">
                 <div class="item-title">
                     ${mainItem.Name}
@@ -402,6 +415,8 @@ function createItemElement(mainItem, allRoomItems) {
 
 window.openItemDetails = function(itemJson) {
     const item = JSON.parse(decodeURIComponent(itemJson));
+    store.currentViewedItem = item;
+
     const imgUrl = item.ImageID ? `https://lh3.googleusercontent.com/d/${item.ImageID}=w1000` : 'https://via.placeholder.com/600';
 
     els.detailModal.img.src = imgUrl;
@@ -415,6 +430,12 @@ window.openItemDetails = function(itemJson) {
     } else {
         els.detailModal.link.style.display = 'none';
     }
+
+    // Purchase Logic
+    const isPurchased = String(item.Purchased).toLowerCase() === 'true';
+    els.detailModal.purchasedCb.checked = isPurchased;
+    els.detailModal.actualPriceGroup.style.display = isPurchased ? 'flex' : 'none';
+    els.detailModal.actualPrice.value = item.ActualPrice || item.Price;
 
     els.modals.details.classList.remove('hidden');
     els.modals.details.style.display = 'flex';
@@ -789,7 +810,52 @@ function setupClipboardPaste() {
 }
 
 function setupEventListeners() {
-    // Add any global listeners here if needed
+    // Purchase Checkbox Logic
+    els.detailModal.purchasedCb.addEventListener('change', (e) => {
+        if (e.target.checked) {
+            els.detailModal.actualPriceGroup.style.display = 'flex';
+        } else {
+            els.detailModal.actualPriceGroup.style.display = 'none';
+        }
+    });
+
+    // Save Purchase Logic
+    els.detailModal.btnSavePurchase.addEventListener('click', async () => {
+        if (!store.currentViewedItem) return;
+
+        const isPurchased = els.detailModal.purchasedCb.checked;
+        const actualPrice = Number(els.detailModal.actualPrice.value) || 0;
+
+        // Optimistic UI Update
+        const itemIdx = store.items.findIndex(i => i.ID === store.currentViewedItem.ID);
+        if (itemIdx > -1) {
+            store.items[itemIdx].Purchased = isPurchased ? 'TRUE' : 'FALSE';
+            store.items[itemIdx].ActualPrice = actualPrice;
+        }
+
+        // Close Modal
+        els.modals.details.classList.remove('visible');
+        setTimeout(() => els.modals.details.style.display = 'none', 300);
+
+        // Re-render
+        renderRoomItems(store.currentRoom);
+        renderBudget();
+
+        // API Call
+        try {
+            await apiCall('updateItem', {
+                item: {
+                    id: store.currentViewedItem.ID,
+                    purchased: isPurchased ? 'TRUE' : 'FALSE',
+                    actualPrice: actualPrice
+                }
+            });
+            showToast('Purchase details saved.');
+        } catch (error) {
+            console.error('Save failed:', error);
+            showToast('Failed to save purchase details.');
+        }
+    });
 }
 
 // -----------------------------------------------------------------------------
@@ -798,9 +864,25 @@ function setupEventListeners() {
 
 function renderBudget() {
     const mainItems = store.items.filter(i => i.Type === 'Main');
-    const total = mainItems.reduce((sum, item) => sum + (Number(item.Price) || 0), 0);
+
+    // Calculate new metrics
+    let spent = 0;
+    let remaining = 0;
+
+    mainItems.forEach(item => {
+        const isPurchased = String(item.Purchased).toLowerCase() === 'true';
+        if (isPurchased) {
+            spent += Number(item.ActualPrice || item.Price) || 0;
+        } else {
+            remaining += Number(item.Price) || 0;
+        }
+    });
+
+    const total = spent + remaining;
 
     els.budgetTotal.textContent = '₪' + total.toLocaleString();
+    els.budgetSpent.textContent = '₪' + spent.toLocaleString();
+    els.budgetRemaining.textContent = '₪' + remaining.toLocaleString();
 
     // Breakdown
     els.budgetList.innerHTML = '';
@@ -815,7 +897,10 @@ function renderBudget() {
         store.rooms.forEach(room => {
             const roomTotal = store.items
                 .filter(i => i.Room === room && i.Type === 'Main')
-                .reduce((sum, item) => sum + (Number(item.Price) || 0), 0);
+                .reduce((sum, item) => {
+                    const isPurchased = String(item.Purchased).toLowerCase() === 'true';
+                    return sum + (isPurchased ? (Number(item.ActualPrice || item.Price) || 0) : (Number(item.Price) || 0));
+                }, 0);
 
             const row = document.createElement('div');
             row.className = 'budget-row';
@@ -830,7 +915,10 @@ function renderBudget() {
         stores.forEach(storeName => {
             const storeTotal = store.items
                 .filter(i => i.Store === storeName && i.Type === 'Main')
-                .reduce((sum, item) => sum + (Number(item.Price) || 0), 0);
+                .reduce((sum, item) => {
+                    const isPurchased = String(item.Purchased).toLowerCase() === 'true';
+                    return sum + (isPurchased ? (Number(item.ActualPrice || item.Price) || 0) : (Number(item.Price) || 0));
+                }, 0);
 
             const row = document.createElement('div');
             row.className = 'budget-row';

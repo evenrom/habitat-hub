@@ -214,6 +214,11 @@ body {
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
   border: 1px solid var(--color-border);
+  position: relative;
+}
+
+.item-card.is-purchased {
+  opacity: 0.6;
 }
 
 .item-main {
@@ -222,13 +227,32 @@ body {
   align-items: center;
 }
 
-.item-img {
+.item-img-wrapper {
+  position: relative;
   width: 80px;
   height: 80px;
+  margin-right: var(--space-md);
+}
+
+.item-img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   border-radius: 8px;
-  margin-right: var(--space-md);
   cursor: pointer; /* Clickable */
+}
+
+.purchased-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background-color: var(--primary-color);
+  color: white;
+  font-size: 0.6rem;
+  padding: 2px 4px;
+  border-radius: 8px;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .item-info {
@@ -419,24 +443,39 @@ body {
 
 /* Budget View */
 .budget-card {
-  background: linear-gradient(135deg, var(--primary-color), #3d523e); /* Darker green gradient */
-  color: white;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  border: 1px solid var(--primary-color);
   padding: var(--space-xl);
-  border-radius: 16px;
+  border-radius: 8px;
   text-align: center;
   margin-bottom: var(--space-lg);
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 
-.budget-card h3 {
-  font-weight: 300;
-  opacity: 0.9;
-  margin-bottom: var(--space-sm);
+.budget-metrics {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: var(--space-md);
 }
 
-.budget-card .amount {
-  font-size: 2.5rem;
+.metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.metric h3 {
+  font-weight: 400;
+  font-size: 1rem;
+  opacity: 0.8;
+  margin-bottom: 4px;
+}
+
+.metric .amount {
+  font-size: 1.5rem;
   font-weight: 700;
+  color: var(--primary-color);
 }
 
 .budget-breakdown h3 {
@@ -534,6 +573,38 @@ body {
     padding: 20px;
     background: rgba(0,0,0,0.8);
     text-align: center;
+    position: relative;
+}
+
+.lightbox-purchase-actions {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255,255,255,0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: stretch;
+}
+
+.lightbox-purchase-actions .form-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0;
+    text-align: left;
+}
+
+.lightbox-purchase-actions label {
+    margin-bottom: 0;
+    font-size: 1rem;
+    color: white;
+}
+
+.lightbox-purchase-actions input[type="number"] {
+    width: 100px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
 }
 
 .lightbox-info h2 {
