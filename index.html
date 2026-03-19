@@ -42,6 +42,12 @@
         <main id="main-content">
             <!-- VIEW: ROOMS (Home) -->
             <section id="view-rooms" class="view active">
+                <div class="view-toggle-container">
+                    <div class="view-toggle">
+                        <button class="toggle-btn active" data-view="Room">By Room</button>
+                        <button class="toggle-btn" data-view="Store">By Store</button>
+                    </div>
+                </div>
                 <div class="room-list" id="room-list-container">
                     <!-- Room items will be injected here -->
                     <div class="skeleton-loader-room"></div>
@@ -79,6 +85,12 @@
 
             <!-- VIEW: BUDGET -->
             <section id="view-budget" class="view hidden">
+                <div class="view-toggle-container">
+                    <div class="view-toggle">
+                        <button class="toggle-btn active" data-view="Room">By Room</button>
+                        <button class="toggle-btn" data-view="Store">By Store</button>
+                    </div>
+                </div>
                 <div class="budget-card total">
                     <h3>Total Budget</h3>
                     <p class="amount" id="budget-total">₪0</p>
@@ -171,6 +183,11 @@
                         <div class="form-group">
                             <label>Name</label>
                             <input type="text" id="val-name" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Store/Vendor</label>
+                            <input type="text" id="val-store" required>
                         </div>
 
                         <div class="form-group">
