@@ -533,8 +533,8 @@ body {
 
 /* Lightbox specific styles */
 .lightbox-content {
-    background-color: #000;
-    color: #fff;
+    background-color: var(--color-surface);
+    color: var(--color-text);
     padding: 0;
     border-radius: 0;
     width: 100%;
@@ -550,7 +550,7 @@ body {
     position: absolute;
     top: 20px;
     right: 20px;
-    color: #fff;
+    color: var(--color-text);
     font-size: 2rem;
     z-index: 10;
 }
@@ -571,40 +571,10 @@ body {
 
 .lightbox-info {
     padding: 20px;
-    background: rgba(0,0,0,0.8);
+    background: var(--color-surface);
+    color: var(--color-text);
     text-align: center;
     position: relative;
-}
-
-.lightbox-purchase-actions {
-    margin-top: 20px;
-    padding-top: 15px;
-    border-top: 1px solid rgba(255,255,255,0.2);
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    align-items: stretch;
-}
-
-.lightbox-purchase-actions .form-group {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0;
-    text-align: left;
-}
-
-.lightbox-purchase-actions label {
-    margin-bottom: 0;
-    font-size: 1rem;
-    color: white;
-}
-
-.lightbox-purchase-actions input[type="number"] {
-    width: 100px;
-    background: rgba(255,255,255,0.1);
-    border: 1px solid rgba(255,255,255,0.3);
-    color: white;
 }
 
 .lightbox-info h2 {
@@ -621,7 +591,8 @@ body {
 
 .detail-dims {
     font-size: 0.9rem;
-    color: #ccc;
+    color: var(--color-text);
+    opacity: 0.7;
     margin-bottom: 16px;
 }
 

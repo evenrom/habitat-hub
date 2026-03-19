@@ -24,6 +24,7 @@ const store = {
     items: [], // [{ id, room, type, name, price... }]
     currentRoom: null,
     currentViewedItem: null,
+    editingItemId: null,
     viewMode: 'Room', // 'Room' or 'Store'
     cropper: null,
     tempImageBlob: null,
@@ -57,10 +58,7 @@ const els = {
         price: document.getElementById('detail-price'),
         dims: document.getElementById('detail-dims'),
         link: document.getElementById('detail-link'),
-        purchasedCb: document.getElementById('detail-purchased-cb'),
-        actualPriceGroup: document.getElementById('detail-actual-price-group'),
-        actualPrice: document.getElementById('detail-actual-price'),
-        btnSavePurchase: document.getElementById('btn-save-purchase')
+        btnEditItem: document.getElementById('btn-edit-item')
     },
     addItemForm: {
         form: document.getElementById('add-item-form'),
@@ -435,17 +433,47 @@ window.openItemDetails = function(itemJson) {
         els.detailModal.link.style.display = 'none';
     }
 
-    // Purchase Logic
-    const isPurchased = String(item.Purchased).toLowerCase() === 'true';
-    els.detailModal.purchasedCb.checked = isPurchased;
-    els.detailModal.actualPriceGroup.style.display = isPurchased ? 'flex' : 'none';
-    els.detailModal.actualPrice.value = item.ActualPrice || item.Price;
+    // Edit Item
+    els.detailModal.btnEditItem.onclick = () => openEditModal(item.ID);
 
     els.modals.details.classList.remove('hidden');
     els.modals.details.style.display = 'flex';
     els.modals.details.offsetHeight;
     els.modals.details.classList.add('visible');
 }
+
+window.openEditModal = function(id) {
+    const item = store.items.find(i => i.ID === id);
+    if (!item) return;
+    store.editingItemId = id;
+
+    // Pre-fill validation form with existing data
+    els.validationForm.name.value = item.Name || '';
+    els.validationForm.price.value = item.Price || '';
+    els.validationForm.dimL.value = item.Dim_L || '';
+    els.validationForm.dimW.value = item.Dim_W || '';
+    els.validationForm.dimH.value = item.Dim_H || '';
+
+    const storeInput = document.getElementById('val-store');
+    if (storeInput) storeInput.value = item.Store || '';
+
+    const imgUrl = item.ImageID ? `https://lh3.googleusercontent.com/d/${item.ImageID}=w600` : 'https://via.placeholder.com/600';
+    els.validationForm.preview.src = imgUrl;
+
+    // Switch Modals
+    els.modals.details.classList.remove('visible');
+    setTimeout(() => {
+        els.modals.details.style.display = 'none';
+        els.modals.validation.classList.remove('hidden');
+        els.modals.validation.style.display = 'flex';
+        els.modals.validation.offsetHeight;
+        els.modals.validation.classList.add('visible');
+
+        els.validationForm.loader.classList.add('hidden');
+        els.validationForm.container.classList.remove('hidden');
+        els.validationForm.saveBtn.textContent = 'Update Item';
+    }, 300);
+};
 
 window.toggleAccordion = function(header) {
     const body = header.nextElementSibling;
@@ -680,35 +708,68 @@ function populateValidationForm(data, imageID, previewBase64) {
 els.validationForm.container.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const newItem = {
-        room: store.currentRoom,
-        type: isAddingAlternative ? 'Alternative' : 'Main',
-        parentID: targetParentId || '',
-        name: els.validationForm.name.value,
-        store: document.getElementById('val-store').value,
-        price: Number(els.validationForm.price.value),
-        dim_l: els.validationForm.dimL.value,
-        dim_w: els.validationForm.dimW.value,
-        dim_h: els.validationForm.dimH.value,
-        imageID: store.tempSaveData.imageID,
-        productURL: store.tempSaveData.productURL
-    };
+    if (store.editingItemId) {
+        const updatedItem = {
+            id: store.editingItemId,
+            name: els.validationForm.name.value,
+            store: document.getElementById('val-store').value,
+            price: Number(els.validationForm.price.value),
+            dim_l: els.validationForm.dimL.value,
+            dim_w: els.validationForm.dimW.value,
+            dim_h: els.validationForm.dimH.value
+        };
 
-    showToast('Saving item...');
+        showToast('Updating item...');
 
-    const result = await apiCall('saveItem', { item: newItem });
+        const result = await apiCall('updateItem', { item: updatedItem });
 
-    if (result && result.success) {
-        showToast('Item saved!');
-        await fetchInitialData();
+        if (result && result.success) {
+            showToast('Item updated!');
+            store.editingItemId = null;
+            els.validationForm.saveBtn.textContent = 'Approve & Save';
 
-        // Close Modal
-        els.modals.validation.classList.remove('visible');
-        setTimeout(() => els.modals.validation.style.display = 'none', 300);
+            // Close Modal
+            els.modals.validation.classList.remove('visible');
+            setTimeout(() => els.modals.validation.style.display = 'none', 300);
 
-        // Return to detail view
-        if (store.currentRoom) {
-            renderRoomItems(store.currentRoom);
+            await fetchInitialData();
+
+            // Return to detail view
+            if (store.currentRoom) {
+                renderRoomItems(store.currentRoom);
+            }
+        }
+    } else {
+        const newItem = {
+            room: store.currentRoom,
+            type: isAddingAlternative ? 'Alternative' : 'Main',
+            parentID: targetParentId || '',
+            name: els.validationForm.name.value,
+            store: document.getElementById('val-store').value,
+            price: Number(els.validationForm.price.value),
+            dim_l: els.validationForm.dimL.value,
+            dim_w: els.validationForm.dimW.value,
+            dim_h: els.validationForm.dimH.value,
+            imageID: store.tempSaveData.imageID,
+            productURL: store.tempSaveData.productURL
+        };
+
+        showToast('Saving item...');
+
+        const result = await apiCall('saveItem', { item: newItem });
+
+        if (result && result.success) {
+            showToast('Item saved!');
+            await fetchInitialData();
+
+            // Close Modal
+            els.modals.validation.classList.remove('visible');
+            setTimeout(() => els.modals.validation.style.display = 'none', 300);
+
+            // Return to detail view
+            if (store.currentRoom) {
+                renderRoomItems(store.currentRoom);
+            }
         }
     }
 });
@@ -835,52 +896,7 @@ function setupClipboardPaste() {
 }
 
 function setupEventListeners() {
-    // Purchase Checkbox Logic
-    els.detailModal.purchasedCb.addEventListener('change', (e) => {
-        if (e.target.checked) {
-            els.detailModal.actualPriceGroup.style.display = 'flex';
-        } else {
-            els.detailModal.actualPriceGroup.style.display = 'none';
-        }
-    });
-
-    // Save Purchase Logic
-    els.detailModal.btnSavePurchase.addEventListener('click', async () => {
-        if (!store.currentViewedItem) return;
-
-        const isPurchased = els.detailModal.purchasedCb.checked;
-        const actualPrice = Number(els.detailModal.actualPrice.value) || 0;
-
-        // Optimistic UI Update
-        const itemIdx = store.items.findIndex(i => i.ID === store.currentViewedItem.ID);
-        if (itemIdx > -1) {
-            store.items[itemIdx].Purchased = isPurchased ? 'TRUE' : 'FALSE';
-            store.items[itemIdx].ActualPrice = actualPrice;
-        }
-
-        // Close Modal
-        els.modals.details.classList.remove('visible');
-        setTimeout(() => els.modals.details.style.display = 'none', 300);
-
-        // Re-render
-        renderRoomItems(store.currentRoom);
-        renderBudget();
-
-        // API Call
-        try {
-            await apiCall('updateItem', {
-                item: {
-                    id: store.currentViewedItem.ID,
-                    purchased: isPurchased ? 'TRUE' : 'FALSE',
-                    actualPrice: actualPrice
-                }
-            });
-            showToast('Purchase details saved.');
-        } catch (error) {
-            console.error('Save failed:', error);
-            showToast('Failed to save purchase details.');
-        }
-    });
+    // Add any global listeners here if needed
 }
 
 // -----------------------------------------------------------------------------
