@@ -6,6 +6,41 @@ export const UI = {
         document.getElementById('budget-remaining').textContent = formatCurrency(stats.remaining);
     },
 
+    async loadAndInjectSVG(url) {
+        try {
+            const svgResponse = await fetch(url);
+            if (svgResponse.ok) {
+                const svgText = await svgResponse.text();
+                document.getElementById('hero-map').innerHTML = svgText;
+
+                const svgElement = document.querySelector('#hero-map svg');
+                if (svgElement) {
+                    // 1. Extract intrinsic dimensions (fallback to 18500x20613 if missing)
+                    const w = parseFloat(svgElement.getAttribute('width')) || 18500;
+                    const h = parseFloat(svgElement.getAttribute('height')) || 20613;
+
+                    // 2. Force responsive viewBox
+                    if (!svgElement.getAttribute('viewBox')) {
+                        svgElement.setAttribute('viewBox', `0 0 ${w} ${h}`);
+                    }
+
+                    // 3. Strip hardcoded absolute constraints
+                    svgElement.removeAttribute('width');
+                    svgElement.removeAttribute('height');
+
+                    // 4. Force CSS scaling priority
+                    svgElement.style.width = '100%';
+                    svgElement.style.height = '100%';
+                    svgElement.style.display = 'block';
+                }
+            } else {
+                console.error('Failed to load floorplan.svg');
+            }
+        } catch (err) {
+            console.error('Error fetching SVG:', err);
+        }
+    },
+
     initMapEvents(onRoomSelect) {
         const hitboxes = document.querySelectorAll('.room-hitbox');
         const isMobile = window.matchMedia('(pointer: coarse)').matches;
