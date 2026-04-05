@@ -1,8 +1,11 @@
 :root {
   --bg-color: #292420;
+  --bg-surface-low: #38322d;
   --primary-color: #567357;
   --accent-color: #adab9e;
   --text-color: #dcd8d7;
+  --ghost-border: rgba(173, 171, 158, 0.15);
+  --spacing-md: 16px;
   --font-family: 'Manrope', sans-serif;
 }
 
@@ -23,6 +26,11 @@ body {
 .sticky-top {
   position: sticky;
   top: 0;
+  padding: var(--spacing-md);
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+  border-bottom: 1px solid var(--ghost-border);
 }
 
 .hidden {
@@ -58,17 +66,26 @@ body {
   opacity: 0.5;
 }
 
+#hero-map {
+  height: 65vh;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-surface-low);
+}
+
 #hero-map svg {
   width: 100%;
-  height: 400px;
-  display: block;
-  background: #e0e0e0;
-  border: 1px solid var(--accent-color);
+  height: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 .room-hitbox {
   cursor: pointer;
-  pointer-events: auto;
+  pointer-events: bounding-box;
   fill: rgba(86, 115, 87, 0);
   transition: fill 0.3s ease;
 }
