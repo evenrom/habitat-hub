@@ -10,13 +10,22 @@ async function init() {
         UI.updateBudget(Store.getBudgetStats());
     });
 
-    // Wire map events
-    UI.initMapEvents((roomId) => {
-        Store.setState({ currentRoom: roomId });
-        UI.renderCarousel(Store.getRoomItems(roomId));
-    });
-
     try {
+        // Fetch and inject floor plan SVG
+        const svgResponse = await fetch('./assets/floorplan.svg');
+        if (svgResponse.ok) {
+            const svgText = await svgResponse.text();
+            document.getElementById('hero-map').innerHTML = svgText;
+        } else {
+            console.error('Failed to load floorplan.svg');
+        }
+
+        // Wire map events after SVG is injected
+        UI.initMapEvents((roomId) => {
+            Store.setState({ currentRoom: roomId });
+            UI.renderCarousel(Store.getRoomItems(roomId));
+        });
+
         const data = await fetchAPI('getInitialData');
         Store.setState({
             config: data.config || {},
