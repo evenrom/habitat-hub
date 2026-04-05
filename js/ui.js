@@ -1,8 +1,9 @@
 export const UI = {
     updateBudget(stats) {
-        document.getElementById('budget-total').textContent = stats.total;
-        document.getElementById('budget-spent').textContent = stats.spent;
-        document.getElementById('budget-remaining').textContent = stats.remaining;
+        const formatCurrency = (val) => '₪' + new Intl.NumberFormat('en-US').format(val || 0);
+        document.getElementById('budget-total').textContent = formatCurrency(stats.total);
+        document.getElementById('budget-spent').textContent = formatCurrency(stats.spent);
+        document.getElementById('budget-remaining').textContent = formatCurrency(stats.remaining);
     },
 
     initMapEvents(onRoomSelect) {
