@@ -52,14 +52,14 @@ export const UI = {
                 const roomId = hitbox.getAttribute('data-room-id');
 
                 if (isMobile) {
-                    if (hitbox.classList.contains('active')) {
+                    if (hitbox.classList.contains('selected')) {
                         // 2nd Tap
-                        hitbox.classList.remove('active');
+                        hitbox.classList.remove('selected');
                         onRoomSelect(roomId);
                     } else {
                         // 1st Tap
-                        hitboxes.forEach(hb => hb.classList.remove('active')); // Reset others
-                        hitbox.classList.add('active');
+                        hitboxes.forEach(hb => hb.classList.remove('selected')); // Reset others
+                        hitbox.classList.add('selected');
                         // Show tooltip could go here
                     }
                 } else {
@@ -93,8 +93,8 @@ export const UI = {
             const isPurchased = item.is_purchased === true || String(item.is_purchased).toLowerCase() === 'true';
             const purchasedClass = isPurchased ? 'purchased' : '';
 
-            // Assume 1:1 drive thumbnails, crop to 3:2 via css
-            const imgUrl = item.imageID ? `https://lh3.googleusercontent.com/d/${item.imageID}=w400` : 'https://via.placeholder.com/300x200';
+            // Drive Thumbnail API URL construction
+            const imgUrl = item.imageID ? `https://lh3.googleusercontent.com/u/0/d/${item.imageID}=s400-c` : 'https://via.placeholder.com/300x200';
 
             const card = document.createElement('div');
             card.className = `carousel-item ${purchasedClass}`;
