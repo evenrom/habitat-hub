@@ -10,9 +10,32 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <div id="app">
-        <!-- App content will be injected here -->
-    </div>
+    <header class="glass-panel sticky-top" style="display: flex; justify-content: space-around; padding: 10px; z-index: 100;">
+        <div class="display-md">TOTAL: <span id="budget-total">0</span></div>
+        <div class="display-md">SPENT: <span id="budget-spent">0</span></div>
+        <div class="display-md">REMAINING: <span id="budget-remaining">0</span></div>
+    </header>
+
+    <main id="hero-map">
+        <svg id="floor-plan" width="100%" height="400px" style="background: #e0e0e0; display: block; border: 1px solid var(--accent-color);">
+            <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#555">Placeholder Floor Plan (Inject raw SVG here)</text>
+            <!-- Example hitboxes for testing -->
+            <rect class="room-hitbox" data-room-id="living_room" x="10%" y="10%" width="30%" height="30%" fill="rgba(0,255,0,0.2)" stroke="green"></rect>
+            <rect class="room-hitbox" data-room-id="kitchen" x="50%" y="10%" width="30%" height="30%" fill="rgba(255,0,0,0.2)" stroke="red"></rect>
+        </svg>
+    </main>
+
+    <section id="room-details" class="hidden" style="padding: 20px;">
+        <h2>Room Details</h2>
+        <div id="carousel-container" style="display: flex; overflow-x: auto; gap: 10px; padding-bottom: 10px;">
+            <!-- Carousel items will be injected here -->
+        </div>
+    </section>
+
+    <button id="fab-magic-add" class="fab" style="position: fixed; bottom: 20px; right: 20px; border-radius: 50%; width: 60px; height: 60px; background-color: var(--primary-color); color: white; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); z-index: 100;">
+        +
+    </button>
+
     <script type="module" src="js/app.js"></script>
 </body>
 </html>

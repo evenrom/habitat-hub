@@ -19,3 +19,50 @@ body {
   backdrop-filter: blur(16px);
   border: 1px solid rgba(173, 171, 158, 0.15);
 }
+
+.sticky-top {
+  position: sticky;
+  top: 0;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.display-md {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.carousel-item {
+  flex: 0 0 auto;
+  width: 240px;
+  background-color: #38322d;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--accent-color);
+}
+
+.carousel-item img {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  object-position: center;
+}
+
+.carousel-item .details {
+  padding: 10px;
+}
+
+.purchased {
+  opacity: 0.5;
+}
+
+.room-hitbox {
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.room-hitbox.active {
+  fill-opacity: 0.5; /* Glassmorphism simulation for SVG */
+}
