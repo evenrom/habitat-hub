@@ -1,0 +1,21 @@
+:root {
+  --bg-color: #292420;
+  --primary-color: #567357;
+  --accent-color: #adab9e;
+  --text-color: #dcd8d7;
+  --font-family: 'Manrope', sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: var(--font-family);
+}
+
+.glass-panel {
+  background: rgba(41, 36, 32, 0.75);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(173, 171, 158, 0.15);
+}
