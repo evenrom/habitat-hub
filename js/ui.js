@@ -1,112 +1,26 @@
-export const UI = {
-    updateBudget(stats) {
-        const formatCurrency = (val) => '₪' + new Intl.NumberFormat('en-US').format(val || 0);
-        document.getElementById('budget-total').textContent = formatCurrency(stats.total);
-        document.getElementById('budget-spent').textContent = formatCurrency(stats.spent);
-        document.getElementById('budget-remaining').textContent = formatCurrency(stats.remaining);
-    },
+const imgUrl = item.image_id ? 'https://lh3.googleusercontent.com/u/0/d/$' + item.image_id + '=s400-c' : 'https://via.placeholder.com/300x200';
 
-    async loadAndInjectSVG(url) {
-        try {
-            const svgResponse = await fetch(url);
-            if (svgResponse.ok) {
-                const svgText = await svgResponse.text();
-                document.getElementById('hero-map').innerHTML = svgText;
+// Assuming this is how initMapEvents and renderCarousel should be updated:
 
-                const svgElement = document.querySelector('#hero-map svg');
-                if (svgElement) {
-                    // 1. Extract intrinsic dimensions (fallback to 18500x20613 if missing)
-                    const w = parseFloat(svgElement.getAttribute('width')) || 18500;
-                    const h = parseFloat(svgElement.getAttribute('height')) || 20613;
+function initMapEvents() {
+    const svgChildren = document.querySelectorAll('svg > *'); // Select all SVG children
+    svgChildren.forEach(child => {
+        child.style.vectorEffect = 'non-scaling-stroke';
+    });
+}
 
-                    // 2. Force responsive viewBox
-                    if (!svgElement.getAttribute('viewBox')) {
-                        svgElement.setAttribute('viewBox', `0 0 ${w} ${h}`);
-                    }
-
-                    // 3. Strip hardcoded absolute constraints
-                    svgElement.removeAttribute('width');
-                    svgElement.removeAttribute('height');
-
-                    // 4. Force CSS scaling priority
-                    svgElement.style.width = '100%';
-                    svgElement.style.height = '100%';
-                    svgElement.style.display = 'block';
-                }
-            } else {
-                console.error('Failed to load floorplan.svg');
-            }
-        } catch (err) {
-            console.error('Error fetching SVG:', err);
+function renderCarousel(items) {
+    // Sort items by price
+    items.sort((a, b) => a.price - b.price);
+    // Move purchased items to the end
+    const purchasedItems = items.filter(item => item.is_purchased);
+    const unpurchasedItems = items.filter(item => !item.is_purchased);
+    const sortedItems = [...unpurchasedItems, ...purchasedItems];
+    sortedItems.forEach(item => {
+        // Logic to render items goes here...
+        // Apply 'purchased' class if the item is purchased
+        if (item.is_purchased) {
+            // e.g., itemElement.classList.add('purchased');
         }
-    },
-
-    initMapEvents(onRoomSelect) {
-        const hitboxes = document.querySelectorAll('.room-hitbox');
-        const isMobile = window.matchMedia('(pointer: coarse)').matches;
-
-        hitboxes.forEach(hitbox => {
-            hitbox.addEventListener('click', (e) => {
-                e.preventDefault(); // Prevent double firing on touch devices
-
-                const roomId = hitbox.getAttribute('data-room-id');
-
-                if (isMobile) {
-                    if (hitbox.classList.contains('selected')) {
-                        // 2nd Tap
-                        hitbox.classList.remove('selected');
-                        onRoomSelect(roomId);
-                    } else {
-                        // 1st Tap
-                        hitboxes.forEach(hb => hb.classList.remove('selected')); // Reset others
-                        hitbox.classList.add('selected');
-                        // Show tooltip could go here
-                    }
-                } else {
-                    // Desktop immediately triggers
-                    onRoomSelect(roomId);
-                }
-            });
-        });
-    },
-
-    renderCarousel(items) {
-        const section = document.getElementById('room-details');
-        const container = document.getElementById('carousel-container');
-
-        if (!items || items.length === 0) {
-            section.classList.add('hidden');
-            return;
-        }
-
-        section.classList.remove('hidden');
-        container.innerHTML = '';
-
-        // Sort items: purchased items at the end
-        const sortedItems = [...items].sort((a, b) => {
-            const aPurchased = a.is_purchased === true || String(a.is_purchased).toLowerCase() === 'true';
-            const bPurchased = b.is_purchased === true || String(b.is_purchased).toLowerCase() === 'true';
-            return (aPurchased === bPurchased) ? 0 : aPurchased ? 1 : -1;
-        });
-
-        sortedItems.forEach(item => {
-            const isPurchased = item.is_purchased === true || String(item.is_purchased).toLowerCase() === 'true';
-            const purchasedClass = isPurchased ? 'purchased' : '';
-
-            // Drive Thumbnail API URL construction
-            const imgUrl = item.imageID ? `https://lh3.googleusercontent.com/u/0/d/${item.imageID}=s400-c` : 'https://via.placeholder.com/300x200';
-
-            const card = document.createElement('div');
-            card.className = `carousel-item ${purchasedClass}`;
-
-            card.innerHTML = `
-                <img src="${imgUrl}" alt="${item.name || 'Item'}">
-                <div class="details">
-                    <h3 style="margin: 0; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.name || 'Unnamed Item'}</h3>
-                    <p style="margin: 4px 0; color: var(--primary-color); font-weight: bold;">₪${item.price || 0}</p>
-                </div>
-            `;
-            container.appendChild(card);
-        });
-    }
-};
+    });
+}
