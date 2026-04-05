@@ -1,21 +1,141 @@
-/* Tactile Atelier Design System Token Enforcement */
-
-/* Transparent Header */
-header {
-    background-color: transparent;
+:root {
+    --bg-surface: #292420;
+    --bg-surface-low: #322d28;
+    --bg-surface-high: #3f3933;
+    --primary: #567357;
+    --primary-glow: rgba(86, 115, 87, 0.4);
+    --accent: #adab9e;
+    --text-main: #dcd8d7;
+    --ghost-border: rgba(173, 171, 158, 0.15);
+    --glass-bg: rgba(41, 36, 32, 0.75);
+    
+    --font-main: 'Manrope', sans-serif;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 2rem;
 }
 
-/* Color Scheme */
 body {
-    color: #333; /* Change to primary text color */
-    background-color: #f5f5f5; /* Change to background color */
+    background-color: var(--bg-surface);
+    color: var(--text-main);
+    font-family: var(--font-main);
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    overflow-x: hidden;
 }
 
-/* SVG Interaction Styling */
-svg {
-    transition: fill 0.3s, stroke 0.3s;
+/* Header & Glassmorphism */
+.sticky-top {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    padding: var(--spacing-md);
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--ghost-border);
+    font-weight: bold;
+    font-size: 1rem;
 }
-svg:hover {
-    fill: #ff6600; /* Change to hover fill color */
-    stroke: #ff6600; /* Change to hover stroke color */
+
+/* Hero Map Layout */
+#hero-map {
+    width: 100%;
+    height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-surface-low);
+    overflow: hidden;
+    border-bottom: 1px solid var(--ghost-border);
+}
+
+#hero-map svg {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* SVG Interactions */
+.room-hitbox {
+    cursor: pointer;
+    pointer-events: bounding-box;
+    fill: rgba(86, 115, 87, 0);
+    transition: fill 0.3s ease;
+}
+
+.room-hitbox:hover,
+.room-hitbox.active,
+.room-hitbox.selected {
+    fill: var(--primary-glow);
+}
+
+/* Room Details & Carousel */
+#room-details {
+    padding: var(--spacing-md);
+}
+
+#room-details.hidden {
+    display: none !important;
+}
+
+.carousel {
+    display: flex;
+    gap: var(--spacing-md);
+    overflow-x: auto;
+    padding-bottom: var(--spacing-md);
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary) var(--bg-surface);
+}
+
+.carousel-item {
+    flex: 0 0 240px;
+    background-color: var(--bg-surface-high);
+    border: 1px solid var(--ghost-border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.carousel-item img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    background-color: #111;
+}
+
+.carousel-item .details {
+    padding: var(--spacing-sm);
+}
+
+.carousel-item.purchased {
+    opacity: 0.5;
+    filter: grayscale(0.5);
+}
+
+/* Floating Action Button */
+.fab {
+    position: fixed;
+    bottom: var(--spacing-lg);
+    right: var(--spacing-lg);
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: var(--primary);
+    color: var(--text-main);
+    border: none;
+    font-size: 28px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    cursor: pointer;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+}
+
+.fab:active {
+    transform: scale(0.95);
 }

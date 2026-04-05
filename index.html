@@ -3,32 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Habitat-Hub v2.0</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <title>Habitat Hub v2.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <header class="glass-panel sticky-top" style="z-index: 100;">
-        <div class="display-md">TOTAL: <span id="budget-total">0</span></div>
-        <div class="display-md">SPENT: <span id="budget-spent">0</span></div>
-        <div class="display-md">REMAINING: <span id="budget-remaining">0</span></div>
+    <header class="glass-panel sticky-top">
+        <div class="stat">TOTAL: <span id="budget-total">₪0</span></div>
+        <div class="stat">SPENT: <span id="budget-spent">₪0</span></div>
+        <div class="stat">REMAINING: <span id="budget-remaining">₪0</span></div>
     </header>
 
     <main id="hero-map">
-    </main>
+        </main>
 
-    <section id="room-details" class="hidden" style="padding: 20px;">
-        <h2>Room Details</h2>
-        <div id="carousel-container" style="display: flex; overflow-x: auto; gap: 10px; padding-bottom: 10px;">
-            <!-- Carousel items will be injected here -->
-        </div>
+    <section id="room-details" class="hidden">
+        <h2 style="margin-top: 0;">Room Details</h2>
+        <div id="carousel-container" class="carousel"></div>
     </section>
 
-    <button id="fab-magic-add" class="fab" style="position: fixed; bottom: 20px; right: 20px; border-radius: 50%; width: 60px; height: 60px; background-color: var(--primary-color); color: white; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); z-index: 100;">
-        +
-    </button>
+    <button id="fab" class="fab">+</button>
 
     <script type="module" src="js/app.js"></script>
 </body>
