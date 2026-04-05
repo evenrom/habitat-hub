@@ -12,9 +12,9 @@
 body {
   margin: 0;
   padding: 0;
-  background-color: var(--bg-color);
-  color: var(--text-color);
-  font-family: var(--font-family);
+  background-color: #292420;
+  color: #dcd8d7;
+  font-family: 'Manrope', sans-serif;
 }
 
 .glass-panel {
@@ -26,11 +26,13 @@ body {
 .sticky-top {
   position: sticky;
   top: 0;
-  padding: var(--spacing-md);
+  padding: 16px;
   display: flex;
   justify-content: space-between;
   font-weight: bold;
-  border-bottom: 1px solid var(--ghost-border);
+  background: rgba(41, 36, 32, 0.75);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(173, 171, 158, 0.15);
 }
 
 .hidden {
@@ -45,7 +47,7 @@ body {
 .carousel-item {
   flex: 0 0 auto;
   width: 240px;
-  background-color: #38322d;
+  background-color: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
   overflow: hidden;
   border: 1px solid var(--accent-color);
@@ -83,6 +85,10 @@ body {
   object-fit: contain;
 }
 
+svg * {
+  vector-effect: non-scaling-stroke;
+}
+
 .room-hitbox {
   cursor: pointer;
   pointer-events: bounding-box;
@@ -91,6 +97,7 @@ body {
 }
 
 .room-hitbox:hover,
-.room-hitbox.active {
+.room-hitbox.selected {
   fill: rgba(86, 115, 87, 0.4);
+  filter: drop-shadow(0 0 4px rgba(86, 115, 87, 0.5));
 }
