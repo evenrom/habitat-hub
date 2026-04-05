@@ -10,6 +10,9 @@ async function init() {
         UI.updateBudget(Store.getBudgetStats());
     });
 
+    // Load and inject SVG map before initializing events
+    await UI.loadAndInjectSVG('./assets/floorplan.svg');
+
     // Wire map events
     UI.initMapEvents((roomId) => {
         Store.setState({ currentRoom: roomId });

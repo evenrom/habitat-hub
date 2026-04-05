@@ -5,6 +5,19 @@ export const UI = {
         document.getElementById('budget-remaining').textContent = stats.remaining;
     },
 
+    async loadAndInjectSVG(url) {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`Failed to load SVG: ${response.status}`);
+            }
+            const svgText = await response.text();
+            document.getElementById('hero-map').innerHTML = svgText;
+        } catch (error) {
+            console.error('Error injecting SVG:', error);
+        }
+    },
+
     initMapEvents(onRoomSelect) {
         const hitboxes = document.querySelectorAll('.room-hitbox');
         const isMobile = window.matchMedia('(pointer: coarse)').matches;

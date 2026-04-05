@@ -1,0 +1,5 @@
+<svg id="floor-plan" width="100%" height="400px" style="background: #e0e0e0; display: block; border: 1px solid var(--accent-color);">
+    <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#555">Injected Floor Plan</text>
+    <rect class="room-hitbox" data-room-id="living_room" x="10%" y="10%" width="30%" height="30%" stroke="green"></rect>
+    <rect class="room-hitbox" data-room-id="kitchen" x="50%" y="10%" width="30%" height="30%" stroke="red"></rect>
+</svg>

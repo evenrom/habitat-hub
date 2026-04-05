@@ -60,9 +60,12 @@ body {
 
 .room-hitbox {
   cursor: pointer;
-  transition: opacity 0.2s;
+  pointer-events: auto;
+  fill: rgba(86, 115, 87, 0);
+  transition: fill 0.3s ease;
 }
 
+.room-hitbox:hover,
 .room-hitbox.active {
-  fill-opacity: 0.5; /* Glassmorphism simulation for SVG */
+  fill: rgba(86, 115, 87, 0.4);
 }
