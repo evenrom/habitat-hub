@@ -11,14 +11,8 @@ async function init() {
     });
 
     try {
-        // Fetch and inject floor plan SVG
-        const svgResponse = await fetch('./assets/floorplan.svg');
-        if (svgResponse.ok) {
-            const svgText = await svgResponse.text();
-            document.getElementById('hero-map').innerHTML = svgText;
-        } else {
-            console.error('Failed to load floorplan.svg');
-        }
+        // Fetch, sanitize, and inject floor plan SVG via UI controller
+        await UI.loadAndInjectSVG('./assets/floorplan.svg');
 
         // Wire map events after SVG is injected
         UI.initMapEvents((roomId) => {
