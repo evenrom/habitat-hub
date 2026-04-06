@@ -120,11 +120,42 @@ export const UI = {
         const modal = document.getElementById('item-modal');
         document.getElementById('modal-image').src = imgUrl;
         document.getElementById('modal-title').textContent = item.name || 'Unnamed Item';
-        document.getElementById('modal-price').textContent = `₪${new Intl.NumberFormat('en-US').format(item.price || 0)}`;
         
-        let detailsHtml = '';
-        if (item.url) detailsHtml += `<p><a href="${item.url}" target="_blank">🔗 Link to Store</a></p>`;
-        if (item.notes) detailsHtml += `<p><strong>Notes:</strong> ${item.notes}</p>`;
+        // הגדרת מחיר (שימוש במחיר בפועל אם קיים)
+        const displayPrice = item.actual_price ? item.actual_price : item.price;
+        const priceLabel = item.actual_price ? 'PAID' : 'MSRP';
+        
+        document.getElementById('modal-price').innerHTML = `
+            <span style="font-size: 10px; color: var(--text-secondary); vertical-align: middle; margin-right: 8px;">${priceLabel}</span>
+            ₪${new Intl.NumberFormat('en-US').format(displayPrice || 0)}
+        `;
+        
+        // הרכבת אזור המפרט הטכני (Dimensions & Store)
+        let detailsHtml = `<div style="margin-top: 24px; display: flex; flex-direction: column; gap: 16px;">`;
+        
+        // שורת חנות ולינק
+        if (item.store || item.product_url) {
+            detailsHtml += `
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); padding-bottom: 12px;">
+                <span style="color: var(--text-secondary); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;">Vendor / Store</span>
+                <a href="${item.product_url || '#'}" target="_blank" style="color: var(--sage-green); text-decoration: none; font-weight: 600; font-size: 14px;">
+                    ${item.store || 'View Store'} ↗
+                </a>
+            </div>`;
+        }
+
+        // שורת מידות
+        if (item.dim_l || item.dim_w || item.dim_h) {
+            detailsHtml += `
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); padding-bottom: 12px;">
+                <span style="color: var(--text-secondary); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;">Dimensions (L × W × H)</span>
+                <span style="color: var(--text-primary); font-family: monospace; font-size: 14px;">
+                    ${item.dim_l || '-'} × ${item.dim_w || '-'} × ${item.dim_h || '-'} cm
+                </span>
+            </div>`;
+        }
+        
+        detailsHtml += `</div>`;
         document.getElementById('modal-details').innerHTML = detailsHtml;
         
         modal.classList.remove('hidden');
@@ -135,5 +166,5 @@ export const UI = {
         window.onclick = (event) => {
             if (event.target === modal) modal.classList.add('hidden');
         };
-    }
+    }}
 };
