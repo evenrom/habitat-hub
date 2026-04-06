@@ -221,12 +221,16 @@
 <path d="" fill="#000000" transform="translate(0,0)"/>
 <path d="" fill="#000000" transform="translate(0,0)"/>
 <g id="interactive-rooms" fill="transparent" stroke="none" style="pointer-events: bounding-box;">
-    <rect class="room-hitbox" data-room-id="LivingRoom" x="800" y="400" width="6400" height="6800" />
-    <rect class="room-hitbox" data-room-id="Kitchen" x="7200" y="2400" width="9600" height="6400" />
-    <rect class="room-hitbox" data-room-id="Bedroom" x="10000" y="9600" width="6800" height="7600" />
-    <rect class="room-hitbox" data-room-id="SafeRoom" x="800" y="13600" width="6400" height="5600" />
-    <rect class="room-hitbox" data-room-id="ShowerRoom" x="800" y="9200" width="4400" height="4000" />
-    <rect class="room-hitbox" data-room-id="Bathroom" x="800" y="7200" width="4000" height="1600" />
-    <rect class="room-hitbox" data-room-id="LaundryRoom" x="7600" y="9600" width="2400" height="3200" />
+    <rect class="room-hitbox" data-room-id="LivingRoom" x="1200" y="500" width="8000" height="4500" />
+    
+    <rect class="room-hitbox" data-room-id="Kitchen" x="9200" y="2800" width="7500" height="4200" />
+    
+    <rect class="room-hitbox" data-room-id="Bedroom" x="9800" y="9000" width="5500" height="6000" />
+    
+    <rect class="room-hitbox" data-room-id="SafeRoom" x="1500" y="11500" width="6000" height="5000" />
+    
+    <rect class="room-hitbox" data-room-id="ShowerRoom" x="1500" y="8500" width="4500" height="3000" />
+    
+    <rect class="room-hitbox" data-room-id="Bathroom" x="1500" y="6500" width="4500" height="2000" />
   </g>
 </svg>
