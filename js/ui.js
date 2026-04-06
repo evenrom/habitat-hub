@@ -1,4 +1,5 @@
 import { Store } from './store.js';
+import { fetchAPI } from './api.js';
 
 export const UI = {
     updateBudget(stats) {
@@ -77,7 +78,7 @@ export const UI = {
         const container = document.getElementById('carousel-container');
 
         // סינון: הסר פריטים שהם אלטרנטיבות
-        const mainItems = items.filter(item => String(item.is_alternative).toLowerCase() !== 'true');
+        const mainItems = items.filter(item => String(item.type).toLowerCase() !== 'alternative');
 
         if (!mainItems || mainItems.length === 0) {
             section.classList.add('hidden');
@@ -172,7 +173,7 @@ export const UI = {
                 alternatives.forEach(alt => {
                     const altPrice = alt.actual_price ? alt.actual_price : alt.price;
                     detailsHtml += `
-                        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-light); border-radius: 8px; padding: 12px; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; cursor: pointer;" onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='rgba(255,255,255,0.02)'">
+                        <div class="alt-item-row" data-alt-id="${alt.id}" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-light); border-radius: 8px; padding: 12px; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; cursor: pointer;" onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='rgba(255,255,255,0.02)'">
                             <div>
                                 <div style="font-size: 13px; font-weight: 600; color: var(--text-primary);">${alt.name || 'Alternative Option'}</div>
                                 <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">${alt.store || 'Unknown Store'}</div>
@@ -189,6 +190,18 @@ export const UI = {
 
         detailsHtml += `</div>`;
         document.getElementById('modal-details').innerHTML = detailsHtml;
+
+        // Attach click listeners to alternative items
+        const altRows = document.querySelectorAll('.alt-item-row');
+        altRows.forEach(row => {
+            row.addEventListener('click', () => {
+                const altId = row.getAttribute('data-alt-id');
+                const altItem = Store.state.items.find(i => i.id === altId);
+                if (altItem && UI.openComparisonModal) {
+                    UI.openComparisonModal(item, altItem);
+                }
+            });
+        });
         
         modal.classList.remove('hidden');
         
@@ -199,6 +212,112 @@ export const UI = {
             if (event.target === modal) modal.classList.add('hidden');
         };
     },
+    openComparisonModal(mainItem, altItem) {
+        // Hide standard item modal
+        document.getElementById('item-modal').classList.add('hidden');
+
+        // Main Item Setup
+        const mainImgUrl = (mainItem.image_id && mainItem.image_id !== 'Unknown') ? 'https://lh3.googleusercontent.com/d/' + mainItem.image_id : 'https://via.placeholder.com/300x200';
+        document.getElementById('compare-main-img').src = mainImgUrl;
+        document.getElementById('compare-main-title').textContent = mainItem.name || 'Unnamed Item';
+
+        const mainDisplayPrice = mainItem.actual_price ? mainItem.actual_price : mainItem.price;
+        document.getElementById('compare-main-price').textContent = `₪${new Intl.NumberFormat('en-US').format(mainDisplayPrice || 0)}`;
+
+        let mainDetails = '';
+        if (mainItem.dim_l || mainItem.dim_w || mainItem.dim_h) {
+            mainDetails += `<div>Dims: ${mainItem.dim_l || '-'} × ${mainItem.dim_w || '-'} × ${mainItem.dim_h || '-'} cm</div>`;
+        }
+        if (mainItem.store) {
+            mainDetails += `<div>Store: ${mainItem.store}</div>`;
+        }
+        document.getElementById('compare-main-details').innerHTML = mainDetails;
+
+        // Alternative Item Setup
+        const altImgUrl = (altItem.image_id && altItem.image_id !== 'Unknown') ? 'https://lh3.googleusercontent.com/d/' + altItem.image_id : 'https://via.placeholder.com/300x200';
+        document.getElementById('compare-alt-img').src = altImgUrl;
+        document.getElementById('compare-alt-title').textContent = altItem.name || 'Unnamed Item';
+
+        const altDisplayPrice = altItem.actual_price ? altItem.actual_price : altItem.price;
+        document.getElementById('compare-alt-price').textContent = `₪${new Intl.NumberFormat('en-US').format(altDisplayPrice || 0)}`;
+
+        let altDetails = '';
+        if (altItem.dim_l || altItem.dim_w || altItem.dim_h) {
+            altDetails += `<div>Dims: ${altItem.dim_l || '-'} × ${altItem.dim_w || '-'} × ${altItem.dim_h || '-'} cm</div>`;
+        }
+        if (altItem.store) {
+            altDetails += `<div>Store: ${altItem.store}</div>`;
+        }
+        document.getElementById('compare-alt-details').innerHTML = altDetails;
+
+        // Swap Logic (btn-select-primary)
+        const selectPrimaryBtn = document.getElementById('btn-select-primary');
+        // Clear previous event listeners using clone
+        const newSelectBtn = selectPrimaryBtn.cloneNode(true);
+        selectPrimaryBtn.parentNode.replaceChild(newSelectBtn, selectPrimaryBtn);
+
+        newSelectBtn.addEventListener('click', async () => {
+            newSelectBtn.textContent = 'Swapping...';
+            newSelectBtn.disabled = true;
+
+            try {
+                // 1. Promote alt to Main
+                await fetchAPI('updateItem', { item: { id: altItem.id, type: 'Main', parent_id: '' } });
+
+                // 2. Demote main to Alternative
+                await fetchAPI('updateItem', { item: { id: mainItem.id, type: 'Alternative', parent_id: altItem.id } });
+
+                // Update local store state
+                altItem.type = 'Main';
+                altItem.parent_id = '';
+
+                mainItem.type = 'Alternative';
+                mainItem.parent_id = altItem.id;
+
+                // 3. Update any other alternatives that pointed to mainItem
+                const otherAlts = Store.state.items.filter(item =>
+                    String(item.type).toLowerCase() === 'alternative' && item.parent_id === mainItem.id
+                );
+
+                for (const otherAlt of otherAlts) {
+                    await fetchAPI('updateItem', { item: { id: otherAlt.id, type: 'Alternative', parent_id: altItem.id } });
+                    otherAlt.parent_id = altItem.id;
+                }
+
+                // Close the modal
+                document.getElementById('comparison-modal').classList.add('hidden');
+
+                // Trigger render with current room/store filters
+                const filteredItems = Store.state.items.filter(item => {
+                    const roomMatch = !Store.state.currentRoom || item.room === Store.state.currentRoom;
+                    const storeMatch = Store.state.currentStore === 'All' || item.store === Store.state.currentStore;
+                    return roomMatch && storeMatch;
+                });
+
+                UI.renderCarousel(filteredItems);
+                UI.updateBudget(Store.getBudgetStats());
+
+            } catch (err) {
+                console.error("Error swapping items:", err);
+                alert("Failed to swap items. Please check console for details.");
+            } finally {
+                newSelectBtn.textContent = 'Select as Primary ↗';
+                newSelectBtn.disabled = false;
+            }
+        });
+
+        // Show comparison modal
+        const compModal = document.getElementById('comparison-modal');
+        compModal.classList.remove('hidden');
+
+        // Close button logic
+        const closeBtn = document.getElementById('close-comparison-modal');
+        closeBtn.onclick = () => compModal.classList.add('hidden');
+        window.onclick = (event) => {
+            if (event.target === compModal) compModal.classList.add('hidden');
+        };
+    },
+
     renderFinanceDashboard(items) {
         const container = document.getElementById('finance-details');
         if (!container) return;
