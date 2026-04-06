@@ -63,7 +63,9 @@ body {
 .room-hitbox {
     cursor: pointer;
     pointer-events: bounding-box;
-    fill: rgba(86, 115, 87, 0);
+    fill: rgba(255, 0, 0, 0.4); /* צבע אדום כדי שתראה אותם */
+    stroke: red; /* מסגרת אדומה */
+    stroke-width: 20px;
     transition: fill 0.3s ease;
 }
 
