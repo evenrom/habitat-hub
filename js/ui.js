@@ -186,7 +186,7 @@ export const UI = {
                 detailsHtml += `</div></div>`;
             }
         }
-        
+
         detailsHtml += `</div>`;
         document.getElementById('modal-details').innerHTML = detailsHtml;
         
@@ -198,5 +198,52 @@ export const UI = {
         window.onclick = (event) => {
             if (event.target === modal) modal.classList.add('hidden');
         };
+    }
+    renderFinanceDashboard(items) {
+        const container = document.getElementById('finance-details');
+        if (!container) return;
+
+        // חישוב הוצאות לפי חדר
+        const roomStats = {};
+        items.forEach(item => {
+            if (String(item.type).toLowerCase() === 'alternative') return;
+            
+            const room = item.room || 'Unassigned';
+            if (!roomStats[room]) roomStats[room] = { estimated: 0, spent: 0 };
+            
+            const isPurchased = item.is_purchased === true || String(item.is_purchased).toLowerCase() === 'true';
+            const price = Number(item.price) || 0;
+            const actualPrice = item.actual_price !== undefined ? Number(item.actual_price) : price;
+
+            roomStats[room].estimated += price;
+            if (isPurchased) {
+                roomStats[room].spent += actualPrice;
+            }
+        });
+
+        let html = '<div style="display: flex; flex-direction: column; gap: 16px;">';
+        
+        for (const [room, stats] of Object.entries(roomStats)) {
+            const percent = stats.estimated > 0 ? Math.min((stats.spent / stats.estimated) * 100, 100) : 0;
+            const remaining = Math.max(0, stats.estimated - stats.spent);
+            
+            html += `
+            <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-light); border-radius: 8px; padding: 16px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                    <strong style="font-size: 14px; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.05em;">${room}</strong>
+                    <span style="font-size: 12px; color: var(--text-secondary);">Est: ₪${new Intl.NumberFormat('en-US').format(stats.estimated)}</span>
+                </div>
+                <div style="width: 100%; background: rgba(0,0,0,0.5); height: 6px; border-radius: 3px; overflow: hidden; margin-bottom: 12px;">
+                    <div style="width: ${percent}%; height: 100%; background: var(--sage-green); transition: width 0.5s ease-out;"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                    <span style="color: var(--sage-green); font-weight: 600;">Spent: ₪${new Intl.NumberFormat('en-US').format(stats.spent)}</span>
+                    <span style="color: var(--text-secondary);">Remaining: ₪${new Intl.NumberFormat('en-US').format(remaining)}</span>
+                </div>
+            </div>`;
+        },
+        
+        html += '</div>';
+        container.innerHTML = html;
     }
 };
