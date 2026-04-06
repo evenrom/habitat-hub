@@ -198,7 +198,7 @@ export const UI = {
         window.onclick = (event) => {
             if (event.target === modal) modal.classList.add('hidden');
         };
-    }
+    },
     renderFinanceDashboard(items) {
         const container = document.getElementById('finance-details');
         if (!container) return;
@@ -241,7 +241,7 @@ export const UI = {
                     <span style="color: var(--text-secondary);">Remaining: ₪${new Intl.NumberFormat('en-US').format(remaining)}</span>
                 </div>
             </div>`;
-        },
+        }
         
         html += '</div>';
         container.innerHTML = html;
