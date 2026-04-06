@@ -1,14 +1,14 @@
 :root {
-    --bg-surface: #292420;
-    --bg-surface-low: #322d28;
-    --bg-surface-high: #3f3933;
-    --primary: #567357;
-    --primary-glow: rgba(86, 115, 87, 0.4);
-    --accent: #adab9e;
-    --text-main: #dcd8d7;
-    --ghost-border: rgba(173, 171, 158, 0.15);
-    --glass-bg: rgba(41, 36, 32, 0.75);
+    /* HDS Color Palette */
+    --onyx: #121212;
+    --sage-green: #9CAF88;
+    --glass-surface: rgba(255, 255, 255, 0.03);
+    --glass-dark: rgba(18, 18, 18, 0.6);
+    --border-light: rgba(255, 255, 255, 0.1);
+    --text-primary: #FFFFFF;
+    --text-secondary: rgba(255, 255, 255, 0.6);
     
+    /* Typography */
     --font-main: 'Manrope', sans-serif;
     --spacing-sm: 0.5rem;
     --spacing-md: 1rem;
@@ -16,8 +16,8 @@
 }
 
 body {
-    background-color: var(--bg-surface);
-    color: var(--text-main);
+    background-color: var(--onyx);
+    color: var(--text-primary);
     font-family: var(--font-main);
     margin: 0;
     padding: 0;
@@ -25,97 +25,164 @@ body {
     overflow-x: hidden;
 }
 
-/* Header & Glassmorphism */
+/* --- Top Navigation --- */
 .sticky-top {
     position: sticky;
     top: 0;
     z-index: 100;
     display: flex;
     justify-content: space-between;
-    padding: var(--spacing-md);
-    background: var(--glass-bg);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-bottom: 1px solid var(--ghost-border);
-    font-weight: bold;
-    font-size: 1rem;
+    align-items: center;
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: var(--glass-dark);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-bottom: 1px solid var(--border-light);
 }
 
-/* Hero Map Layout */
+.brand {
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: 0.05em;
+}
+
+.financials {
+    display: flex;
+    gap: var(--spacing-lg);
+}
+
+.stat {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.stat span {
+    color: var(--text-primary);
+    font-weight: 700;
+    font-size: 14px;
+    margin-left: 4px;
+}
+
+/* --- Interactive Map --- */
 #hero-map {
     width: 100%;
     height: 60vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: var(--bg-surface-low);
+    background-color: var(--onyx);
     overflow: hidden;
-    border-bottom: 1px solid var(--ghost-border);
+    border-bottom: 1px solid var(--border-light);
+    position: relative;
 }
 
+/* Invert SVG to white lines */
 #hero-map svg {
     width: 100%;
     height: 100%;
     object-fit: contain;
+    filter: invert(1) opacity(0.5); 
 }
 
-/* SVG Interactions */
+/* Hitboxes (Using mathematically inverted Sage Green) */
 .room-hitbox {
     cursor: pointer;
     pointer-events: bounding-box;
-    fill: rgba(86, 115, 87, 0); /* החזרנו לשקוף */
-    transition: fill 0.3s ease;
+    fill: transparent;
+    transition: fill 0.4s ease;
 }
 
 .room-hitbox:hover,
 .room-hitbox.active,
 .room-hitbox.selected {
-    fill: var(--primary-glow);
+    fill: rgba(99, 80, 119, 0.4); /* Inverts exactly to Sage Green! */
 }
 
-/* Room Details & Carousel */
+/* --- Selected Products Carousel --- */
 #room-details {
-    padding: var(--spacing-md);
+    padding: var(--spacing-lg);
+    background-color: var(--onyx);
 }
 
-#room-details.hidden {
-    display: none !important;
+#room-details h2 {
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: var(--spacing-md);
+    margin-top: 0;
 }
+
+#room-details.hidden { display: none !important; }
 
 .carousel {
     display: flex;
     gap: var(--spacing-md);
     overflow-x: auto;
     padding-bottom: var(--spacing-md);
-    scrollbar-width: thin;
-    scrollbar-color: var(--primary) var(--bg-surface);
+    scrollbar-width: none; /* Hide scrollbar */
 }
+.carousel::-webkit-scrollbar { display: none; }
 
 .carousel-item {
-    flex: 0 0 240px;
-    background-color: var(--bg-surface-high);
-    border: 1px solid var(--ghost-border);
-    border-radius: 8px;
+    flex: 0 0 280px;
+    background: var(--glass-surface);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
     overflow: hidden;
+    backdrop-filter: blur(24px);
+    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    cursor: pointer;
+}
+
+/* Lume Effect on Hover */
+.carousel-item:hover {
+    transform: translateY(-4px);
+    border-color: rgba(156, 175, 136, 0.4); /* Sage Green border */
+    box-shadow: 0 10px 30px rgba(156, 175, 136, 0.1);
 }
 
 .carousel-item img {
     width: 100%;
-    height: 160px;
+    height: 220px;
     object-fit: cover;
-    background-color: #111;
+    opacity: 0.85;
+    transition: opacity 0.3s ease;
 }
 
+.carousel-item:hover img { opacity: 1; }
+
 .carousel-item .details {
-    padding: var(--spacing-sm);
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    padding: var(--spacing-lg) var(--spacing-md) var(--spacing-md);
+    background: linear-gradient(to top, rgba(18,18,18,0.95) 20%, transparent);
+    box-sizing: border-box;
+}
+
+.carousel-item h3 {
+    margin: 0 0 4px 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.carousel-item p {
+    margin: 0;
+    color: var(--sage-green);
+    font-weight: 700;
+    font-size: 14px;
 }
 
 .carousel-item.purchased {
     opacity: 0.5;
-    filter: grayscale(0.5);
+    filter: grayscale(1);
 }
 
-/* Floating Action Button */
+/* --- Floating Action Button --- */
 .fab {
     position: fixed;
     bottom: var(--spacing-lg);
@@ -123,11 +190,11 @@ body {
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    background-color: var(--primary);
-    color: var(--text-main);
+    background-color: var(--sage-green);
+    color: var(--onyx);
     border: none;
     font-size: 28px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    box-shadow: 0 4px 20px rgba(156, 175, 136, 0.3);
     cursor: pointer;
     z-index: 100;
     display: flex;
@@ -136,35 +203,38 @@ body {
     transition: transform 0.2s;
 }
 
-.fab:active {
-    transform: scale(0.95);
-}
+.fab:active { transform: scale(0.95); }
 
-/* Modal Styles */
+/* --- Modal Base --- */
 .modal {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0, 0, 0, 0.8);
     display: flex; justify-content: center; align-items: center;
     z-index: 1000;
+    backdrop-filter: blur(8px);
 }
 
 .modal.hidden { display: none; }
 
 .modal-content {
-    background: var(--bg-surface);
+    background: var(--glass-dark);
     padding: var(--spacing-lg);
     border-radius: 12px;
     max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;
     position: relative;
-    border: 1px solid var(--ghost-border);
+    border: 1px solid var(--border-light);
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
 }
 
 .close-button {
-    position: absolute; top: 10px; right: 15px;
-    font-size: 28px; cursor: pointer; color: var(--text-main);
+    position: absolute; top: 15px; right: 20px;
+    font-size: 24px; cursor: pointer; color: var(--text-secondary);
+    transition: color 0.2s;
 }
 
+.close-button:hover { color: var(--text-primary); }
+
 #modal-image { width: 100%; border-radius: 8px; margin-bottom: var(--spacing-md); object-fit: cover; }
-.modal-content .price { color: var(--primary); font-size: 1.5rem; font-weight: bold; margin: 0 0 10px 0; }
-.details-text a { color: var(--primary); text-decoration: none; font-weight: bold; }
+.modal-content .price { color: var(--sage-green); font-size: 1.5rem; font-weight: bold; margin: 0 0 10px 0; }
+.details-text a { color: var(--sage-green); text-decoration: none; font-weight: 600; }
