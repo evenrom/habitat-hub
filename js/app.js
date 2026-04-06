@@ -17,7 +17,12 @@ async function init() {
         // Wire map events after SVG is injected
         UI.initMapEvents((roomId) => {
             Store.setState({ currentRoom: roomId });
-            UI.renderCarousel(Store.getRoomItems(roomId));
+            const filteredItems = Store.state.items.filter(item => {
+                const roomMatch = item.room === roomId;
+                const storeMatch = Store.state.currentStore === 'All' || item.store === Store.state.currentStore;
+                return roomMatch && storeMatch;
+            });
+            UI.renderCarousel(filteredItems);
         });
 
         const data = await fetchAPI('getInitialData');
@@ -26,6 +31,33 @@ async function init() {
             items: data.items || [],
             isLoading: false
         });
+
+        // Populate Store Filter
+        const storeFilter = document.getElementById('store-filter');
+        if (storeFilter && Store.state.items) {
+            const uniqueStores = [...new Set(Store.state.items.map(item => item.store).filter(store => store && store.trim() !== ''))];
+            uniqueStores.sort().forEach(storeName => {
+                const option = document.createElement('option');
+                option.value = storeName;
+                option.textContent = storeName;
+                option.style.background = '#121212';
+                storeFilter.appendChild(option);
+            });
+
+            // Cross-Filtering Logic
+            storeFilter.addEventListener('change', (e) => {
+                const selectedStore = e.target.value;
+                Store.setState({ currentStore: selectedStore });
+
+                const filteredItems = Store.state.items.filter(item => {
+                    const roomMatch = !Store.state.currentRoom || item.room === Store.state.currentRoom;
+                    const storeMatch = selectedStore === 'All' || item.store === selectedStore;
+                    return roomMatch && storeMatch;
+                });
+
+                UI.renderCarousel(filteredItems);
+            });
+        }
 
         // Trigger initial budget render
         UI.updateBudget(Store.getBudgetStats());
