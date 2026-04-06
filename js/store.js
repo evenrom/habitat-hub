@@ -3,6 +3,7 @@ export const Store = {
         config: {},
         items: [],
         currentRoom: null,
+        currentStore: 'All',
         isLoading: true
     },
 
@@ -36,6 +37,10 @@ export const Store = {
         };
 
         this.state.items.forEach(item => {
+            if (String(item.type).toLowerCase() === 'alternative') {
+                return;
+            }
+
             const isPurchased = item.is_purchased === true || String(item.is_purchased).toLowerCase() === 'true';
             const itemPrice = Number(item.price) || 0;
             const itemActualPrice = item.actual_price !== undefined ? Number(item.actual_price) : itemPrice;
