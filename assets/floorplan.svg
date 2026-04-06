@@ -222,7 +222,7 @@
 <path d="" fill="#000000" transform="translate(0,0)"/>
 <g id="interactive-rooms" fill="rgba(255, 0, 0, 0.4)" stroke="red" stroke-width="2px" style="pointer-events: bounding-box;">
     
-    <rect class="room-hitbox" data-room-id="LivingRoom" x="5%" y="5%" width="40%" height="340%" />
+    <rect class="room-hitbox" data-room-id="LivingRoom" x="5%" y="5%" width="40%" height="40%" />
     
     <rect class="room-hitbox" data-room-id="Kitchen" x="45%" y="10%" width="60%" height="35%" />
     
