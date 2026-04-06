@@ -44,6 +44,33 @@
         </div>
     </div>
 
+    <div id="add-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-button" id="close-add-modal">&times;</span>
+            <h2 style="margin-top: 0; margin-bottom: 24px; display: flex; align-items: center; gap: 8px; font-size: 20px;">
+                <span style="color: var(--sage-green);">✨</span> Magic AI Add
+            </h2>
+            
+            <div style="border: 1px dashed var(--border-light); border-radius: 8px; padding: 40px 20px; text-align: center; margin-bottom: 24px; cursor: pointer; background: rgba(255,255,255,0.02); transition: background 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='rgba(255,255,255,0.02)'">
+                <div style="font-size: 24px; margin-bottom: 8px; opacity: 0.8;">📷</div>
+                <div style="font-size: 14px; font-weight: 500;">Drop image or click to upload</div>
+                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 6px;">High-resolution JPG or PNG preferred</div>
+            </div>
+            
+            <div style="margin-bottom: 24px;">
+                <label style="display: block; font-size: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">Product URL</label>
+                <input type="text" placeholder="https://" style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border-light); color: var(--text-primary); padding: 12px; border-radius: 6px; box-sizing: border-box; font-family: var(--font-main); outline: none;">
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 16px; margin-top: 32px;">
+                <button id="cancel-add" style="background: transparent; border: none; color: var(--text-secondary); cursor: pointer; font-family: var(--font-main); font-weight: 600; font-size: 14px; transition: color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--text-secondary)'">Cancel</button>
+                <button style="background: var(--sage-green); color: var(--onyx); border: none; padding: 10px 24px; border-radius: 6px; font-weight: 700; cursor: pointer; font-family: var(--font-main); font-size: 14px; display: flex; align-items: center; gap: 6px; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                    🪄 Analyze & Save
+                </button>
+            </div>
+        </div>
+    </div>
+    
     <script type="module" src="js/app.js"></script>
 </body>
 </html>

@@ -62,6 +62,28 @@ async function init() {
         // Trigger initial budget render
         UI.updateBudget(Store.getBudgetStats());
 
+        // --- הוספנו את זה עכשיו: Setup Magic AI Add Modal Logic ---
+        const fabButton = document.getElementById('fab');
+        const addModal = document.getElementById('add-modal');
+        const closeAddBtn = document.getElementById('close-add-modal');
+        const cancelAddBtn = document.getElementById('cancel-add');
+
+        if (fabButton && addModal) {
+            const hideAddModal = () => addModal.classList.add('hidden');
+            
+            // פתיחת המודאל בלחיצה על כפתור הפלוס
+            fabButton.addEventListener('click', () => addModal.classList.remove('hidden'));
+            
+            // סגירת המודאל
+            if (closeAddBtn) closeAddBtn.addEventListener('click', hideAddModal);
+            if (cancelAddBtn) cancelAddBtn.addEventListener('click', hideAddModal);
+            
+            // סגירה בלחיצה על הרקע השחור מחוץ לחלון
+            window.addEventListener('click', (e) => { 
+                if (e.target === addModal) hideAddModal(); 
+            });
+        }
+        
     } catch (error) {
         console.error('Failed to load initial data:', error);
         alert('שגיאת מערכת: Failed to load application data. Please try again later.');

@@ -1,3 +1,5 @@
+import { Store } from './store.js';
+
 export const UI = {
     updateBudget(stats) {
         const formatCurrency = (val) => '₪' + new Intl.NumberFormat('en-US').format(val || 0);
@@ -153,6 +155,36 @@ export const UI = {
                     ${item.dim_l || '-'} × ${item.dim_w || '-'} × ${item.dim_h || '-'} cm
                 </span>
             </div>`;
+        }
+        
+        // חיפוש אלטרנטיבות המשויכות לפריט הזה
+        if (Store && Store.state && Store.state.items) {
+            const alternatives = Store.state.items.filter(alt => 
+                String(alt.type).toLowerCase() === 'alternative' && alt.parent_id === item.id
+            );
+
+            if (alternatives.length > 0) {
+                detailsHtml += `
+                <div style="margin-top: 24px; border-top: 1px solid var(--border-light); padding-top: 16px;">
+                    <span style="color: var(--text-secondary); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;">Curated Alternatives (${alternatives.length})</span>
+                    <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 12px;">`;
+                
+                alternatives.forEach(alt => {
+                    const altPrice = alt.actual_price ? alt.actual_price : alt.price;
+                    detailsHtml += `
+                        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-light); border-radius: 8px; padding: 12px; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; cursor: pointer;" onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='rgba(255,255,255,0.02)'">
+                            <div>
+                                <div style="font-size: 13px; font-weight: 600; color: var(--text-primary);">${alt.name || 'Alternative Option'}</div>
+                                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">${alt.store || 'Unknown Store'}</div>
+                            </div>
+                            <div style="color: var(--sage-green); font-weight: bold; font-size: 14px;">
+                                ₪${new Intl.NumberFormat('en-US').format(altPrice || 0)}
+                            </div>
+                        </div>`;
+                });
+                
+                detailsHtml += `</div></div>`;
+            }
         }
         
         detailsHtml += `</div>`;
