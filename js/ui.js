@@ -94,7 +94,7 @@ export const UI = {
             const purchasedClass = isPurchased ? 'purchased' : '';
             
             // STRICT STRING CONCATENATION FOR IMAGE FIX
-            const imgUrl = (item.image_id && item.image_id !== 'Unknown') ? 'https://drive.google.com/uc?export=view&id=' + item.image_id : 'https://via.placeholder.com/300x200';
+            const imgUrl = (item.image_id && item.image_id !== 'Unknown') ? 'https://lh3.googleusercontent.com/d/' + item.image_id : 'https://via.placeholder.com/300x200';
 
             const card = document.createElement('div');
             card.className = `carousel-item ${purchasedClass}`;
