@@ -224,13 +224,13 @@
     
     <rect class="room-hitbox" data-room-id="LivingRoom" x="5%" y="5%" width="40%" height="30%" />
     
-    <rect class="room-hitbox" data-room-id="Kitchen" x="45%" y="10%" width="50%" height="35%" />
+    <rect class="room-hitbox" data-room-id="Kitchen" x="45%" y="10%" width="60%" height="35%" />
     
     <rect class="room-hitbox" data-room-id="Bedroom" x="50%" y="50%" width="40%" height="40%" />
     
     <rect class="room-hitbox" data-room-id="SafeRoom" x="5%" y="65%" width="35%" height="30%" />
     
-    <rect class="room-hitbox" data-room-id="ShowerRoom" x="5%" y="45%" width="30%" height="15%" />
+    <rect class="room-hitbox" data-room-id="ShowerRoom" x="5%" y="45%" width="40%" height="15%" />
     
     <rect class="room-hitbox" data-room-id="Bathroom" x="5%" y="35%" width="30%" height="10%" />
 
