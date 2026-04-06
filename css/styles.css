@@ -238,3 +238,28 @@ body {
 #modal-image { width: 100%; border-radius: 8px; margin-bottom: var(--spacing-md); object-fit: cover; }
 .modal-content .price { color: var(--sage-green); font-size: 1.5rem; font-weight: bold; margin: 0 0 10px 0; }
 .details-text a { color: var(--sage-green); text-decoration: none; font-weight: 600; }
+
+/* --- Custom Scrollbar Styling --- */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--sage-green);
+}
+
+/* For Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
