@@ -63,9 +63,7 @@ body {
 .room-hitbox {
     cursor: pointer;
     pointer-events: bounding-box;
-    fill: rgba(255, 0, 0, 0.4); /* צבע אדום כדי שתראה אותם */
-    stroke: red; /* מסגרת אדומה */
-    stroke-width: 20px;
+    fill: rgba(86, 115, 87, 0); /* החזרנו לשקוף */
     transition: fill 0.3s ease;
 }
 
@@ -141,3 +139,32 @@ body {
 .fab:active {
     transform: scale(0.95);
 }
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 1000;
+}
+
+.modal.hidden { display: none; }
+
+.modal-content {
+    background: var(--bg-surface);
+    padding: var(--spacing-lg);
+    border-radius: 12px;
+    max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;
+    position: relative;
+    border: 1px solid var(--ghost-border);
+}
+
+.close-button {
+    position: absolute; top: 10px; right: 15px;
+    font-size: 28px; cursor: pointer; color: var(--text-main);
+}
+
+#modal-image { width: 100%; border-radius: 8px; margin-bottom: var(--spacing-md); object-fit: cover; }
+.modal-content .price { color: var(--primary); font-size: 1.5rem; font-weight: bold; margin: 0 0 10px 0; }
+.details-text a { color: var(--primary); text-decoration: none; font-weight: bold; }

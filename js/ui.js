@@ -74,7 +74,10 @@ export const UI = {
         const section = document.getElementById('room-details');
         const container = document.getElementById('carousel-container');
 
-        if (!items || items.length === 0) {
+        // סינון: הסר פריטים שהם אלטרנטיבות
+        const mainItems = items.filter(item => String(item.is_alternative).toLowerCase() !== 'true');
+
+        if (!mainItems || mainItems.length === 0) {
             section.classList.add('hidden');
             return;
         }
@@ -82,7 +85,7 @@ export const UI = {
         section.classList.remove('hidden');
         container.innerHTML = '';
 
-        const sortedItems = [...items].sort((a, b) => {
+        const sortedItems = [...mainItems].sort((a, b) => {
             const aPurchased = a.is_purchased === true || String(a.is_purchased).toLowerCase() === 'true';
             const bPurchased = b.is_purchased === true || String(b.is_purchased).toLowerCase() === 'true';
             if (aPurchased !== bPurchased) return aPurchased ? 1 : -1;
@@ -93,19 +96,44 @@ export const UI = {
             const isPurchased = item.is_purchased === true || String(item.is_purchased).toLowerCase() === 'true';
             const purchasedClass = isPurchased ? 'purchased' : '';
             
-            // STRICT STRING CONCATENATION FOR IMAGE FIX
             const imgUrl = (item.image_id && item.image_id !== 'Unknown') ? 'https://lh3.googleusercontent.com/d/' + item.image_id : 'https://via.placeholder.com/300x200';
 
             const card = document.createElement('div');
             card.className = `carousel-item ${purchasedClass}`;
+            card.style.cursor = 'pointer'; // סמן עכבר לחיץ
+            
             card.innerHTML = `
                 <img src="${imgUrl}" alt="${item.name || 'Item'}">
                 <div class="details">
                     <h3 style="margin: 0; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.name || 'Unnamed Item'}</h3>
-                    <p style="margin: 4px 0; color: var(--primary-color); font-weight: bold;">₪${new Intl.NumberFormat('en-US').format(item.price || 0)}</p>
+                    <p style="margin: 4px 0; color: var(--primary); font-weight: bold;">₪${new Intl.NumberFormat('en-US').format(item.price || 0)}</p>
                 </div>
             `;
+            
+            // אירוע לחיצה שפותח את חלון הפרטים
+            card.addEventListener('click', () => UI.openModal(item, imgUrl));
+            
             container.appendChild(card);
         });
+    },
+    openModal(item, imgUrl) {
+        const modal = document.getElementById('item-modal');
+        document.getElementById('modal-image').src = imgUrl;
+        document.getElementById('modal-title').textContent = item.name || 'Unnamed Item';
+        document.getElementById('modal-price').textContent = `₪${new Intl.NumberFormat('en-US').format(item.price || 0)}`;
+        
+        let detailsHtml = '';
+        if (item.url) detailsHtml += `<p><a href="${item.url}" target="_blank">🔗 Link to Store</a></p>`;
+        if (item.notes) detailsHtml += `<p><strong>Notes:</strong> ${item.notes}</p>`;
+        document.getElementById('modal-details').innerHTML = detailsHtml;
+        
+        modal.classList.remove('hidden');
+        
+        // מנגנון סגירה
+        const closeBtn = modal.querySelector('.close-button');
+        closeBtn.onclick = () => modal.classList.add('hidden');
+        window.onclick = (event) => {
+            if (event.target === modal) modal.classList.add('hidden');
+        };
     }
 };
