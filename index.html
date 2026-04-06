@@ -82,6 +82,32 @@
                 </div>
         </div>
     </div>
+
+    <div id="comparison-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 800px; width: 95%;">
+            <span class="close-button" id="close-comparison-modal">&times;</span>
+            <h2 style="margin-top: 0; margin-bottom: 24px; font-size: 20px; text-transform: uppercase; letter-spacing: 0.05em;">Compare Options</h2>
+            
+            <div class="comparison-grid">
+                <div class="compare-card">
+                    <div class="compare-badge current">Current Selection</div>
+                    <img id="compare-main-img" src="" alt="Main Item">
+                    <h3 id="compare-main-title"></h3>
+                    <div class="price" id="compare-main-price"></div>
+                    <div class="compare-details" id="compare-main-details"></div>
+                </div>
+
+                <div class="compare-card">
+                    <div class="compare-badge alternative">Alternative</div>
+                    <img id="compare-alt-img" src="" alt="Alternative Item">
+                    <h3 id="compare-alt-title"></h3>
+                    <div class="price" id="compare-alt-price" style="color: var(--text-primary);"></div>
+                    <div class="compare-details" id="compare-alt-details"></div>
+                    <button id="btn-select-primary" class="swap-button">Select as Primary ↗</button>
+                </div>
+            </div>
+        </div>
+    </div>
     
     <script type="module" src="js/app.js"></script>
 </body>
