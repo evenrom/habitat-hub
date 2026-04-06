@@ -106,7 +106,7 @@ export const UI = {
                 <img src="${imgUrl}" alt="${item.name || 'Item'}">
                 <div class="details">
                     <h3 style="margin: 0; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.name || 'Unnamed Item'}</h3>
-                    <p style="margin: 4px 0; color: var(--primary); font-weight: bold;">₪${new Intl.NumberFormat('en-US').format(item.price || 0)}</p>
+                    <p style="margin: 4px 0; color: var(--sage-green); font-weight: bold;">₪${new Intl.NumberFormat('en-US').format(item.price || 0)}</p>
                 </div>
             `;
             
@@ -166,5 +166,5 @@ export const UI = {
         window.onclick = (event) => {
             if (event.target === modal) modal.classList.add('hidden');
         };
-    }}
+    }
 };
