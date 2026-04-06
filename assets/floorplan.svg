@@ -234,16 +234,5 @@
     
     <rect class="room-hitbox" data-room-id="Bathroom" x="5%" y="35%" width="25%" height="10%" />
 
-  </g>    <rect class="room-hitbox" data-room-id="LivingRoom" x="1200" y="500" width="8000" height="4500" />
-    
-    <rect class="room-hitbox" data-room-id="Kitchen" x="9200" y="2800" width="7500" height="4200" />
-    
-    <rect class="room-hitbox" data-room-id="Bedroom" x="9800" y="9000" width="5500" height="6000" />
-    
-    <rect class="room-hitbox" data-room-id="SafeRoom" x="1500" y="11500" width="6000" height="5000" />
-    
-    <rect class="room-hitbox" data-room-id="ShowerRoom" x="1500" y="8500" width="4500" height="3000" />
-    
-    <rect class="room-hitbox" data-room-id="Bathroom" x="1500" y="6500" width="4500" height="2000" />
   </g>
 </svg>
