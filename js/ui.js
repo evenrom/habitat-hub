@@ -3,10 +3,8 @@ import { fetchAPI } from './api.js';
 
 export const UI = {
     updateBudget(stats) {
-        const formatCurrency = (val) => '₪' + new Intl.NumberFormat('en-US').format(val || 0);
-        document.getElementById('budget-total').textContent = formatCurrency(stats.total);
-        document.getElementById('budget-spent').textContent = formatCurrency(stats.spent);
-        document.getElementById('budget-remaining').textContent = formatCurrency(stats.remaining);
+        // Deprecated: Budget display moved to the Finance Dashboard modal.
+        return;
     },
 
     async loadAndInjectSVG(url) {
