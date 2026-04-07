@@ -377,26 +377,54 @@ export const UI = {
         const container = document.getElementById('finance-details');
         if (!container) return;
 
-        // חישוב הוצאות לפי חדר
-        const roomStats = {};
+        let roomStats = {};
+        // חישוב כולל לפרויקט
+        let grandTotalEst = 0;
+        let grandTotalSpent = 0;
+
         items.forEach(item => {
-            if (String(item.type).toLowerCase() === 'alternative') return;
-            
             const room = item.room || 'Unassigned';
-            if (!roomStats[room]) roomStats[room] = { estimated: 0, spent: 0 };
+            if (!roomStats[room]) {
+                roomStats[room] = { estimated: 0, spent: 0 };
+            }
             
-            const isPurchased = item.is_purchased === true || String(item.is_purchased).toLowerCase() === 'true';
             const price = Number(item.price) || 0;
-            const actualPrice = item.actual_price !== undefined ? Number(item.actual_price) : price;
+            const actualPrice = Number(item.actual_price) || price;
+            const isPurchased = item.is_purchased === true || String(item.is_purchased).toLowerCase() === 'true';
 
             roomStats[room].estimated += price;
+            grandTotalEst += price;
+
             if (isPurchased) {
                 roomStats[room].spent += actualPrice;
+                grandTotalSpent += actualPrice;
             }
         });
 
+        let grandTotalRem = Math.max(0, grandTotalEst - grandTotalSpent);
+        let grandPercent = grandTotalEst > 0 ? Math.min((grandTotalSpent / grandTotalEst) * 100, 100) : 0;
+
         let html = '<div style="display: flex; flex-direction: column; gap: 16px;">';
-        
+
+        // --- Grand Total Card (הסיכום הראשי) ---
+        html += `
+        <div style="background: rgba(169, 191, 168, 0.1); border: 1px solid var(--sage-green); border-radius: 8px; padding: 16px; margin-bottom: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                <strong style="font-size: 16px; color: var(--sage-green); text-transform: uppercase; letter-spacing: 0.1em;">Total Project</strong>
+                <span style="font-size: 14px; color: var(--text-primary); font-weight: 600;">Est: ₪${new Intl.NumberFormat('en-US').format(grandTotalEst)}</span>
+            </div>
+            <div style="width: 100%; background: rgba(0,0,0,0.5); height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 12px;">
+                <div style="width: ${grandPercent}%; height: 100%; background: var(--sage-green); transition: width 0.5s ease-out;"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                <span style="color: var(--sage-green); font-weight: 600;">Spent: ₪${new Intl.NumberFormat('en-US').format(grandTotalSpent)}</span>
+                <span style="color: var(--text-secondary);">Remaining: ₪${new Intl.NumberFormat('en-US').format(grandTotalRem)}</span>
+            </div>
+        </div>
+        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 0 0 8px 0;">
+        `;
+
+        // --- Room Breakdown (פירוט חדרים) ---
         for (const [room, stats] of Object.entries(roomStats)) {
             const percent = stats.estimated > 0 ? Math.min((stats.spent / stats.estimated) * 100, 100) : 0;
             const remaining = Math.max(0, stats.estimated - stats.spent);
@@ -419,5 +447,5 @@ export const UI = {
         
         html += '</div>';
         container.innerHTML = html;
-    }
+    },
 };
