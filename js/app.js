@@ -68,7 +68,7 @@ async function init() {
             if (cropper) {
                 cropper.destroy();
             }
-            cropper = new Cropper(reviewImg, { viewMode: 1, autoCropArea: 1 });
+            cropper = new Cropper(reviewImg, { viewMode: 1, autoCropArea: 1, aspectRatio: 3 / 2 });
         }
 
         const fabButton = document.getElementById('fab');
