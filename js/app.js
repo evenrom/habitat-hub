@@ -63,6 +63,14 @@ async function init() {
         UI.updateBudget(Store.getBudgetStats());
 
         // --- Setup Magic AI Add Modal Logic ---
+        let cropper = null;
+        function initCropper() {
+            if (cropper) {
+                cropper.destroy();
+            }
+            cropper = new Cropper(reviewImg, { viewMode: 1, autoCropArea: 1 });
+        }
+
         const fabButton = document.getElementById('fab');
         const addModal = document.getElementById('add-modal');
         const closeAddBtn = document.getElementById('close-add-modal');
@@ -87,6 +95,10 @@ async function init() {
 
         if (fabButton && addModal) {
             const hideAddModal = () => {
+                if (cropper) {
+                    cropper.destroy();
+                    cropper = null;
+                }
                 addModal.classList.add('hidden');
                 step1.classList.remove('hidden');
                 step2.classList.add('hidden');
@@ -179,6 +191,8 @@ async function init() {
                         step1.classList.add('hidden');
                         step2.classList.remove('hidden');
                         
+                        setTimeout(() => initCropper(), 100);
+
                     } catch (error) {
                         console.error('Analyze Error:', error);
                         alert('Failed to analyze. Please try again.');
@@ -191,6 +205,10 @@ async function init() {
             // חזרה מביקורת אחורה
             if (btnBackEdit) {
                 btnBackEdit.addEventListener('click', () => {
+                    if (cropper) {
+                        cropper.destroy();
+                        cropper = null;
+                    }
                     step2.classList.add('hidden');
                     step1.classList.remove('hidden');
                     btnText.textContent = '🪄 Analyze';
@@ -205,6 +223,12 @@ async function init() {
                         btnConfirmSave.disabled = true;
                         btnConfirmSave.textContent = '⏳ SAVING...';
 
+                        const croppedBase64 = cropper ? cropper.getCroppedCanvas().toDataURL('image/jpeg', 0.8) : null;
+                        if (croppedBase64) {
+                            const uploadRes = await fetchAPI('uploadImage', { base64Image: croppedBase64 });
+                            pendingItemData.image_id = uploadRes.image_id;
+                        }
+
                         // עדכון הנתונים הזמניים לפי מה שהמשתמש ערך
                         pendingItemData.name = document.getElementById('review-name').value;
                         pendingItemData.price = Number(document.getElementById('review-price').value) || 0;
@@ -213,11 +237,21 @@ async function init() {
                         pendingItemData.dim_w = document.getElementById('review-w').value;
                         pendingItemData.dim_h = document.getElementById('review-h').value;
 
+                        if (window.pendingAlternativeParentId) {
+                            pendingItemData.type = 'Alternative';
+                            pendingItemData.parent_id = window.pendingAlternativeParentId;
+                        } else {
+                            pendingItemData.type = 'Main';
+                            pendingItemData.parent_id = '';
+                        }
+
                         const saveRes = await fetchAPI('saveItem', { item: pendingItemData });
                         
                         pendingItemData.id = saveRes.id;
                         Store.setState({ items: [...Store.state.items, pendingItemData] });
                         
+                        window.pendingAlternativeParentId = null;
+
                         if (Store.state.currentRoom) {
                             const filteredItems = Store.state.items.filter(item => 
                                 item.room === Store.state.currentRoom && 

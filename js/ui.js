@@ -188,8 +188,18 @@ export const UI = {
             }
         }
 
+        detailsHtml += `<button id="btn-add-alt-inline" style="width: 100%; margin-top: 16px; background: transparent; border: 1px dashed var(--sage-green); color: var(--sage-green); padding: 10px; border-radius: 8px; cursor: pointer;">+ Add Alternative</button>`;
         detailsHtml += `</div>`;
         document.getElementById('modal-details').innerHTML = detailsHtml;
+
+        const btnAddAltInline = document.getElementById('btn-add-alt-inline');
+        if (btnAddAltInline) {
+            btnAddAltInline.addEventListener('click', () => {
+                modal.classList.add('hidden');
+                window.pendingAlternativeParentId = item.id;
+                document.getElementById('add-modal').classList.remove('hidden');
+            });
+        }
 
         // Attach click listeners to alternative items
         const altRows = document.querySelectorAll('.alt-item-row');
