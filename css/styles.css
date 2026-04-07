@@ -397,3 +397,11 @@ body {
         height: 350px; /* Compress the map vertically */
     }
 }
+/* --- Purchased Item State (Carousel) --- */
+.carousel-item.purchased {
+    opacity: 0.5;
+    transition: opacity 0.3s ease;
+}
+.carousel-item.purchased:hover {
+    opacity: 0.8;
+}
