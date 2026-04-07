@@ -164,7 +164,12 @@ export const UI = {
     },
     openModal(item, imgUrl) {
         const modal = document.getElementById('item-modal');
-        document.getElementById('modal-image').src = imgUrl;
+        const modalImage = document.getElementById('modal-image');
+        
+        // Reset image opacity
+        modalImage.style.opacity = '1';
+        modalImage.src = imgUrl;
+        
         document.getElementById('modal-title').textContent = item.name || 'Unnamed Item';
         
         // הגדרת מחיר (שימוש במחיר בפועל אם קיים)
@@ -231,9 +236,53 @@ export const UI = {
             }
         }
 
-        detailsHtml += `<button id="btn-add-alt-inline" style="width: 100%; margin-top: 16px; background: transparent; border: 1px dashed var(--sage-green); color: var(--sage-green); padding: 10px; border-radius: 8px; cursor: pointer;">+ Add Alternative</button>`;
+        // --- הוספת כפתור "נרכש" או תגית "נרכש" ---
+        const isPurchased = item.is_purchased === true || String(item.is_purchased).toLowerCase() === 'true';
+        
+        if (!isPurchased) {
+            detailsHtml += `<button id="btn-mark-purchased" style="width: 100%; margin-top: 16px; margin-bottom: 8px; background: var(--sage-green); color: var(--onyx); border: none; padding: 12px; border-radius: 8px; font-weight: 700; font-family: var(--font-main); cursor: pointer; transition: 0.2s;">✓ Mark as Purchased</button>`;
+        } else {
+            detailsHtml += `<div style="width: 100%; margin-top: 16px; margin-bottom: 8px; background: rgba(169, 191, 168, 0.1); color: var(--sage-green); border: 1px solid var(--sage-green); padding: 12px; border-radius: 8px; font-weight: 700; font-family: var(--font-main); text-align: center; box-sizing: border-box;">✓ Purchased</div>`;
+            modalImage.style.opacity = '0.5';
+        }
+
+        detailsHtml += `<button id="btn-add-alt-inline" style="width: 100%; margin-top: 8px; background: transparent; border: 1px dashed var(--sage-green); color: var(--sage-green); padding: 10px; border-radius: 8px; cursor: pointer;">+ Add Alternative</button>`;
         detailsHtml += `</div>`;
+        
         document.getElementById('modal-details').innerHTML = detailsHtml;
+
+        // --- חיבור אירוע לכפתור הנרכש ---
+        const btnMarkPurchased = document.getElementById('btn-mark-purchased');
+        if (btnMarkPurchased) {
+            btnMarkPurchased.addEventListener('click', async () => {
+                btnMarkPurchased.textContent = '⏳ Saving...';
+                btnMarkPurchased.disabled = true;
+                btnMarkPurchased.style.opacity = '0.7';
+                
+                try {
+                    await fetchAPI('updateItem', { item: { id: item.id, is_purchased: true } });
+                    
+                    // Update local state
+                    const storeItem = Store.state.items.find(i => i.id === item.id);
+                    if (storeItem) {
+                        storeItem.is_purchased = true;
+                    }
+                    
+                    // Trigger UI re-render
+                    Store.setState({ items: Store.state.items });
+                    UI.updateBudget(Store.getBudgetStats());
+                    
+                    // Re-open modal to show updated state
+                    UI.openModal(storeItem, imgUrl);
+                } catch (err) {
+                    console.error("Failed to mark item as purchased:", err);
+                    alert("Failed to update item. Please try again.");
+                    btnMarkPurchased.textContent = '✓ Mark as Purchased';
+                    btnMarkPurchased.disabled = false;
+                    btnMarkPurchased.style.opacity = '1';
+                }
+            });
+        }
 
         const btnAddAltInline = document.getElementById('btn-add-alt-inline');
         if (btnAddAltInline) {
