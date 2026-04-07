@@ -2,8 +2,9 @@ export const Store = {
     state: {
         config: {},
         items: [],
-        currentRoom: null,
+        currentRoom: 'All',
         currentStore: 'All',
+        viewMode: 'rooms',
         isLoading: true
     },
 

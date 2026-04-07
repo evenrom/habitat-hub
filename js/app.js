@@ -16,13 +16,28 @@ async function init() {
 
         // Wire map events after SVG is injected
         UI.initMapEvents((roomId) => {
-            Store.setState({ currentRoom: roomId });
-            const filteredItems = Store.state.items.filter(item => {
-                const roomMatch = item.room === roomId;
-                const storeMatch = Store.state.currentStore === 'All' || item.store === Store.state.currentStore;
-                return roomMatch && storeMatch;
-            });
-            UI.renderCarousel(filteredItems);
+            Store.setState({ viewMode: 'rooms', currentRoom: roomId });
+            document.getElementById('btn-view-rooms').classList.add('active');
+            document.getElementById('btn-view-stores').classList.remove('active');
+            UI.renderCarousel(Store.state.items);
+        });
+
+        // Wire View Toggles
+        const btnViewRooms = document.getElementById('btn-view-rooms');
+        const btnViewStores = document.getElementById('btn-view-stores');
+
+        btnViewStores.addEventListener('click', () => {
+            Store.setState({ viewMode: 'stores', currentRoom: 'All' });
+            btnViewStores.classList.add('active');
+            btnViewRooms.classList.remove('active');
+            UI.renderCarousel(Store.state.items);
+        });
+
+        btnViewRooms.addEventListener('click', () => {
+            Store.setState({ viewMode: 'rooms', currentRoom: 'All' });
+            btnViewRooms.classList.add('active');
+            btnViewStores.classList.remove('active');
+            UI.renderCarousel(Store.state.items);
         });
 
         const data = await fetchAPI('getInitialData');
@@ -61,6 +76,9 @@ async function init() {
 
         // Trigger initial budget render
         UI.updateBudget(Store.getBudgetStats());
+
+        // Initial render
+        UI.renderCarousel(Store.state.items);
 
         // --- Setup Magic AI Add Modal Logic ---
         let cropper = null;
