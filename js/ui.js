@@ -75,10 +75,9 @@ export const UI = {
 
     renderCarousel(items) {
         const section = document.getElementById('room-details');
-        const container = document.getElementById('carousel-container');
 
-        // סינון: הסר פריטים שהם אלטרנטיבות
-        const mainItems = items.filter(item => String(item.type).toLowerCase() !== 'alternative');
+        // Remove filtering out from Store, logic is now grouped and filtering depends on viewMode
+        let mainItems = items.filter(item => String(item.type).toLowerCase() !== 'alternative');
 
         if (!mainItems || mainItems.length === 0) {
             section.classList.add('hidden');
@@ -86,37 +85,83 @@ export const UI = {
         }
 
         section.classList.remove('hidden');
-        container.innerHTML = '';
 
-        const sortedItems = [...mainItems].sort((a, b) => {
-            const aPurchased = a.is_purchased === true || String(a.is_purchased).toLowerCase() === 'true';
-            const bPurchased = b.is_purchased === true || String(b.is_purchased).toLowerCase() === 'true';
-            if (aPurchased !== bPurchased) return aPurchased ? 1 : -1;
-            return (a.price || 0) - (b.price || 0);
-        });
+        let groups = {};
 
-        sortedItems.forEach(item => {
-            const isPurchased = item.is_purchased === true || String(item.is_purchased).toLowerCase() === 'true';
-            const purchasedClass = isPurchased ? 'purchased' : '';
-            
-            const imgUrl = (item.image_id && item.image_id !== 'Unknown') ? 'https://lh3.googleusercontent.com/d/' + item.image_id : 'https://via.placeholder.com/300x200';
+        if (Store.state.viewMode === 'rooms') {
+            if (Store.state.currentRoom && Store.state.currentRoom !== 'All') {
+                mainItems = mainItems.filter(item => item.room === Store.state.currentRoom);
+            }
+            mainItems.forEach(item => {
+                const groupName = item.room || 'Unassigned';
+                if (!groups[groupName]) groups[groupName] = [];
+                groups[groupName].push(item);
+            });
+        } else if (Store.state.viewMode === 'stores') {
+            mainItems.forEach(item => {
+                const groupName = item.store || 'Unassigned';
+                if (!groups[groupName]) groups[groupName] = [];
+                groups[groupName].push(item);
+            });
+        }
 
-            const card = document.createElement('div');
-            card.className = `carousel-item ${purchasedClass}`;
-            card.style.cursor = 'pointer'; // סמן עכבר לחיץ
+        // Target 'room-details'. Clear innerHTML since we will build headers + carousels dynamically.
+        // Also add the original container id to avoid changing the HTML layout.
+        section.innerHTML = '<h2>Selected Products</h2><div id="carousel-container" style="display: flex; flex-direction: column; gap: 0;"></div>';
+        const rootContainer = document.getElementById('carousel-container');
+
+        if (Object.keys(groups).length === 0) {
+             section.classList.add('hidden');
+             return;
+        }
+
+        Object.keys(groups).forEach(groupName => {
+            const groupItems = groups[groupName];
             
-            card.innerHTML = `
-                <img src="${imgUrl}" alt="${item.name || 'Item'}">
-                <div class="details">
-                    <h3 style="margin: 0; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.name || 'Unnamed Item'}</h3>
-                    <p style="margin: 4px 0; color: var(--sage-green); font-weight: bold;">₪${new Intl.NumberFormat('en-US').format(item.price || 0)}</p>
-                </div>
-            `;
+            const groupHeader = document.createElement('h2');
+            groupHeader.style.cssText = 'margin-top: 32px; font-size: 16px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.1em;';
+            groupHeader.textContent = groupName;
+            rootContainer.appendChild(groupHeader);
+
+            const container = document.createElement('div');
+            container.className = 'carousel';
+            // Important for multiple carousels stacked
+            container.style.display = 'flex';
+            container.style.gap = '16px';
+            container.style.overflowX = 'auto';
+            container.style.paddingBottom = '16px';
+            container.style.marginBottom = '24px';
             
-            // אירוע לחיצה שפותח את חלון הפרטים
-            card.addEventListener('click', () => UI.openModal(item, imgUrl));
-            
-            container.appendChild(card);
+            const sortedItems = [...groupItems].sort((a, b) => {
+                const aPurchased = a.is_purchased === true || String(a.is_purchased).toLowerCase() === 'true';
+                const bPurchased = b.is_purchased === true || String(b.is_purchased).toLowerCase() === 'true';
+                if (aPurchased !== bPurchased) return aPurchased ? 1 : -1;
+                return (a.price || 0) - (b.price || 0);
+            });
+
+            sortedItems.forEach(item => {
+                const isPurchased = item.is_purchased === true || String(item.is_purchased).toLowerCase() === 'true';
+                const purchasedClass = isPurchased ? 'purchased' : '';
+
+                const imgUrl = (item.image_id && item.image_id !== 'Unknown') ? 'https://lh3.googleusercontent.com/d/' + item.image_id : 'https://via.placeholder.com/300x200';
+
+                const card = document.createElement('div');
+                card.className = `carousel-item ${purchasedClass}`;
+                card.style.cursor = 'pointer';
+
+                card.innerHTML = `
+                    <img src="${imgUrl}" alt="${item.name || 'Item'}">
+                    <div class="details">
+                        <h3 style="margin: 0; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.name || 'Unnamed Item'}</h3>
+                        <p style="margin: 4px 0; color: var(--sage-green); font-weight: bold;">₪${new Intl.NumberFormat('en-US').format(item.price || 0)}</p>
+                    </div>
+                `;
+
+                card.addEventListener('click', () => UI.openModal(item, imgUrl));
+
+                container.appendChild(card);
+            });
+            rootContainer.appendChild(container);
         });
     },
     openModal(item, imgUrl) {
