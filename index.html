@@ -13,18 +13,12 @@
    <header class="glass-panel sticky-top">
         <div class="brand">HABITAT</div>
         
-        <div class="filters">
-            <select id="store-filter" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 6px 12px; border-radius: 8px; font-family: 'Manrope', sans-serif; font-size: 12px; outline: none; cursor: pointer;">
-                <option value="All" style="background: #121212;">All Stores</option>
-            </select>
+        <div id="view-toggles" style="display: flex; gap: 8px;">
+            <button id="btn-view-rooms" class="view-btn active" style="background: rgba(255,255,255,0.1); border: 1px solid var(--border-light); color: var(--text-primary); padding: 6px 16px; border-radius: 20px; font-family: var(--font-main); font-size: 12px; cursor: pointer; transition: 0.2s;">Rooms</button>
+            <button id="btn-view-stores" class="view-btn" style="background: transparent; border: 1px solid transparent; color: var(--text-secondary); padding: 6px 16px; border-radius: 20px; font-family: var(--font-main); font-size: 12px; cursor: pointer; transition: 0.2s;">Stores</button>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 24px;">
-            <div class="financials">
-                <div class="stat">TOTAL <span id="budget-total">₪0</span></div>
-                <div class="stat">SPENT <span id="budget-spent">₪0</span></div>
-                <div class="stat">REMAINING <span id="budget-remaining">₪0</span></div>
-            </div>
+        <div>
             <button id="open-finance" style="background: transparent; border: 1px solid var(--border-light); color: var(--text-primary); padding: 8px 16px; border-radius: 20px; font-family: var(--font-main); font-size: 12px; font-weight: 600; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">Finance Dashboard</button>
         </div>
     </header>
@@ -37,7 +31,7 @@
         <div id="carousel-container" class="carousel"></div>
     </section>
 
-    <button id="fab" class="fab">+</button>
+    <button id="fab" class="fab-pill"><span>+</span> Add</button>
 
     <div id="item-modal" class="modal hidden">
         <div class="modal-content">

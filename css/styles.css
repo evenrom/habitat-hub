@@ -318,3 +318,82 @@ body {
 .swap-button:hover {
     background: var(--sage-green); color: var(--onyx);
 }
+
+/* --- New Pill FAB --- */
+.fab-pill {
+    position: fixed;
+    bottom: var(--spacing-lg);
+    right: var(--spacing-lg);
+    background: rgba(18, 18, 18, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--sage-green);
+    color: var(--sage-green);
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-family: var(--font-main);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.fab-pill:hover {
+    background: var(--sage-green);
+    color: var(--onyx);
+}
+
+.fab-pill span {
+    font-size: 18px;
+    line-height: 1;
+}
+
+/* --- View Buttons Active State --- */
+.view-btn:hover {
+    color: var(--text-primary) !important;
+}
+.view-btn.active {
+    background: rgba(255,255,255,0.1) !important;
+    border-color: var(--border-light) !important;
+    color: var(--text-primary) !important;
+}
+
+/* --- Mobile Responsiveness (Phones) --- */
+@media (max-width: 768px) {
+    header.glass-panel {
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 12px;
+        justify-content: center;
+    }
+    .brand {
+        width: 100%;
+        text-align: center;
+        margin-bottom: 4px;
+    }
+    #view-toggles {
+        justify-content: center;
+        width: 100%;
+        margin-bottom: 8px;
+    }
+    
+    /* Smaller carousel cards for mobile */
+    .carousel-item { min-width: 150px; }
+    .carousel-item img { height: 110px; }
+    .carousel-item h3 { font-size: 12px; }
+    
+    /* Modals take up more screen on mobile */
+    .modal-content {
+        width: 95%;
+        margin: 5% auto;
+        padding: 16px;
+    }
+    
+    #hero-map {
+        height: 350px; /* Compress the map vertically */
+    }
+}
