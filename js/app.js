@@ -126,6 +126,7 @@ async function init() {
                 step2.classList.add('hidden');
                 currentBase64Image = null;
                 pendingItemData = null;
+                window.pendingEditItem = null;
                 if(urlInput) urlInput.value = '';
                 if(dropzoneText) dropzoneText.textContent = 'Drop image, click, or Ctrl+V to paste';
                 if(btnText) btnText.textContent = '🪄 Analyze';
@@ -203,10 +204,10 @@ async function init() {
                             const scenarioHtml = `
                                 <div style="margin-top: 12px; display: flex; flex-direction: column;">
                                     <label style="font-size: 12px; color: var(--text-light); margin-bottom: 4px;">Scenario / Tier</label>
-                                    <select id="review-scenario" style="width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(173, 171, 158, 0.3); color: var(--text-light); border-radius: 8px;">
-                                        <option value="Balanced" selected>Balanced (Default)</option>
-                                        <option value="Premium">Premium</option>
-                                        <option value="Pragmatic">Pragmatic</option>
+                                    <select id="review-scenario" style="width: 100%; background: transparent; color: white; border: 1px solid var(--border-light); padding: 8px; border-radius: 4px;">
+                                        <option value="Balanced" style="color: black;">Balanced</option>
+                                        <option value="Premium" style="color: black;">Premium</option>
+                                        <option value="Pragmatic" style="color: black;">Pragmatic</option>
                                     </select>
                                 </div>
                             `;
@@ -252,10 +253,16 @@ async function init() {
                         cropper.destroy();
                         cropper = null;
                     }
-                    step2.classList.add('hidden');
-                    step1.classList.remove('hidden');
-                    btnText.textContent = '🪄 Analyze';
-                    analyzeBtn.disabled = false;
+                    if (window.pendingEditItem) {
+                        // If we are backing out of an edit, fully cancel the flow and clear state
+                        hideAddModal();
+                    } else {
+                        // Regular flow back to step 1
+                        step2.classList.add('hidden');
+                        step1.classList.remove('hidden');
+                        btnText.textContent = '🪄 Analyze';
+                        analyzeBtn.disabled = false;
+                    }
                 });
             }
 
@@ -265,6 +272,17 @@ async function init() {
                     try {
                         btnConfirmSave.disabled = true;
                         btnConfirmSave.textContent = '⏳ SAVING...';
+
+                        if (window.pendingEditItem) {
+                            pendingItemData = window.pendingEditItem;
+                        } else if (!pendingItemData) {
+                            // Fallback initialization just in case, though it should be set in step 1
+                            pendingItemData = {
+                                room: Store.state.currentRoom || 'Unassigned',
+                                type: 'Main', parent_id: '',
+                                image_id: '', product_url: '', is_purchased: false
+                            };
+                        }
 
                         const croppedBase64 = cropper ? cropper.getCroppedCanvas().toDataURL('image/jpeg', 0.8) : null;
                         if (croppedBase64) {
@@ -283,27 +301,45 @@ async function init() {
                         const scenarioEl = document.getElementById('review-scenario');
                         pendingItemData.scenario = scenarioEl ? scenarioEl.value : 'Balanced';
 
-                        if (window.pendingAlternativeParentId) {
-                            const parentItem = Store.state.items.find(i => i.id === window.pendingAlternativeParentId);
+                        if (!pendingItemData.id) {
+                            if (window.pendingAlternativeParentId) {
+                                const parentItem = Store.state.items.find(i => i.id === window.pendingAlternativeParentId);
+                                if (parentItem && parentItem.scenario === pendingItemData.scenario) {
+                                    alert(`Validation Error: Alternative item cannot have the same scenario (${pendingItemData.scenario}) as its Main item.`);
+                                    btnConfirmSave.textContent = '✓ CONFIRM & SAVE';
+                                    btnConfirmSave.disabled = false;
+                                    return;
+                                }
+                                pendingItemData.type = 'Alternative';
+                                pendingItemData.parent_id = window.pendingAlternativeParentId;
+                            } else {
+                                pendingItemData.type = 'Main';
+                                pendingItemData.parent_id = '';
+                            }
+                        } else if (String(pendingItemData.type).toLowerCase() === 'alternative' && pendingItemData.parent_id) {
+                            // Validate edits on existing alternative items
+                            const parentItem = Store.state.items.find(i => i.id === pendingItemData.parent_id);
                             if (parentItem && parentItem.scenario === pendingItemData.scenario) {
                                 alert(`Validation Error: Alternative item cannot have the same scenario (${pendingItemData.scenario}) as its Main item.`);
                                 btnConfirmSave.textContent = '✓ CONFIRM & SAVE';
                                 btnConfirmSave.disabled = false;
                                 return;
                             }
-                            pendingItemData.type = 'Alternative';
-                            pendingItemData.parent_id = window.pendingAlternativeParentId;
-                        } else {
-                            pendingItemData.type = 'Main';
-                            pendingItemData.parent_id = '';
                         }
 
-                        const saveRes = await fetchAPI('saveItem', { item: pendingItemData });
-                        
-                        pendingItemData.id = saveRes.id;
-                        Store.setState({ items: [...Store.state.items, pendingItemData] });
+                        if (pendingItemData.id) {
+                            await fetchAPI('updateItem', { item: pendingItemData });
+                            Store.setState({
+                                items: Store.state.items.map(i => i.id === pendingItemData.id ? pendingItemData : i)
+                            });
+                        } else {
+                            const saveRes = await fetchAPI('saveItem', { item: pendingItemData });
+                            pendingItemData.id = saveRes.id;
+                            Store.setState({ items: [...Store.state.items, pendingItemData] });
+                        }
                         
                         window.pendingAlternativeParentId = null;
+                        window.pendingEditItem = null;
 
                         if (Store.state.currentRoom) {
                             const filteredItems = Store.state.items.filter(item => 
@@ -313,6 +349,7 @@ async function init() {
                             );
                             UI.renderCarousel(filteredItems);
                         }
+                        UI.updateBudget(Store.getBudgetStats());
                         
                         hideAddModal();
                     } catch (error) {

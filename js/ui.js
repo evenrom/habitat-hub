@@ -328,9 +328,55 @@ export const UI = {
         }
 
         detailsHtml += `<button id="btn-add-alt-inline" style="width: 100%; margin-top: 8px; background: transparent; border: 1px dashed var(--sage-green); color: var(--sage-green); padding: 10px; border-radius: 8px; cursor: pointer;">+ Add Alternative</button>`;
+        detailsHtml += `<button id="btn-edit-item" class="swap-button" style="margin-top: 8px;">✎ Edit Details</button>`;
         detailsHtml += `</div>`;
         
         document.getElementById('modal-details').innerHTML = detailsHtml;
+
+        const btnEditItem = document.getElementById('btn-edit-item');
+        if (btnEditItem) {
+            btnEditItem.addEventListener('click', () => {
+                modal.classList.add('hidden');
+
+                // Set the pending edit item globally for app.js to catch
+                window.pendingEditItem = { ...item };
+
+                // Make sure scenario UI exists
+                if (!document.getElementById('review-scenario')) {
+                    const scenarioHtml = `
+                        <div style="margin-top: 12px; display: flex; flex-direction: column;">
+                            <label style="font-size: 12px; color: var(--text-light); margin-bottom: 4px;">Scenario / Tier</label>
+                            <select id="review-scenario" style="width: 100%; background: transparent; color: white; border: 1px solid var(--border-light); padding: 8px; border-radius: 4px;">
+                                <option value="Balanced" style="color: black;">Balanced</option>
+                                <option value="Premium" style="color: black;">Premium</option>
+                                <option value="Pragmatic" style="color: black;">Pragmatic</option>
+                            </select>
+                        </div>
+                    `;
+                    const reviewStore = document.getElementById('review-store');
+                    if (reviewStore && reviewStore.parentNode) {
+                        reviewStore.parentNode.insertAdjacentHTML('afterend', scenarioHtml);
+                    }
+                }
+
+                // Populate Add Modal fields
+                document.getElementById('review-name').value = item.name || '';
+                document.getElementById('review-price').value = item.price || '';
+                document.getElementById('review-store').value = item.store || '';
+                document.getElementById('review-l').value = item.dim_l || '';
+                document.getElementById('review-w').value = item.dim_w || '';
+                document.getElementById('review-h').value = item.dim_h || '';
+                const scenarioEl = document.getElementById('review-scenario');
+                if (scenarioEl) scenarioEl.value = item.scenario || 'Balanced';
+
+                document.getElementById('review-img').src = imgUrl;
+
+                // Open the modal on Step 2
+                document.getElementById('add-step-1').classList.add('hidden');
+                document.getElementById('add-step-2').classList.remove('hidden');
+                document.getElementById('add-modal').classList.remove('hidden');
+            });
+        }
 
         // --- חיבור אירוע לכפתור הנרכש ---
         const btnMarkPurchased = document.getElementById('btn-mark-purchased');
