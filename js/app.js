@@ -77,6 +77,9 @@ async function init() {
         // Trigger initial budget render
         UI.updateBudget(Store.getBudgetStats());
 
+        // Initialize Render Nodes (Wait for map rendering cycle first)
+        setTimeout(() => UI.initRenderNodes(Store.state.renders), 100);
+
         // Initial render
         UI.renderCarousel(Store.state.items);
 
@@ -194,6 +197,25 @@ async function init() {
                             product_url: url, is_purchased: false
                         };
 
+                        // Inject Scenario Select dynamically if missing
+                        if (!document.getElementById('review-scenario')) {
+                            const scenarioHtml = `
+                                <div style="margin-top: 12px; display: flex; flex-direction: column;">
+                                    <label style="font-size: 12px; color: var(--text-light); margin-bottom: 4px;">Scenario / Tier</label>
+                                    <select id="review-scenario" style="width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(173, 171, 158, 0.3); color: var(--text-light); border-radius: 8px;">
+                                        <option value="Balanced" selected>Balanced (Default)</option>
+                                        <option value="Premium">Premium</option>
+                                        <option value="Pragmatic">Pragmatic</option>
+                                    </select>
+                                </div>
+                            `;
+                            // Insert before dimensions row ideally, or append to review fields container
+                            const reviewStore = document.getElementById('review-store');
+                            if (reviewStore && reviewStore.parentNode) {
+                                reviewStore.parentNode.insertAdjacentHTML('afterend', scenarioHtml);
+                            }
+                        }
+
                         // אכלוס שדות העריכה
                         document.getElementById('review-name').value = extracted.name || '';
                         document.getElementById('review-price').value = extracted.price || '';
@@ -201,6 +223,8 @@ async function init() {
                         document.getElementById('review-l').value = extracted.dim_l || '';
                         document.getElementById('review-w').value = extracted.dim_w || '';
                         document.getElementById('review-h').value = extracted.dim_h || '';
+                        const scenarioEl = document.getElementById('review-scenario');
+                        if (scenarioEl) scenarioEl.value = 'Balanced';
                         
                         // אם אין תמונה, נשים פלייסחולדר
                         if (!currentBase64Image) reviewImg.src = 'https://via.placeholder.com/150?text=No+Image';
@@ -255,7 +279,17 @@ async function init() {
                         pendingItemData.dim_w = document.getElementById('review-w').value;
                         pendingItemData.dim_h = document.getElementById('review-h').value;
 
+                        const scenarioEl = document.getElementById('review-scenario');
+                        pendingItemData.scenario = scenarioEl ? scenarioEl.value : 'Balanced';
+
                         if (window.pendingAlternativeParentId) {
+                            const parentItem = Store.state.items.find(i => i.id === window.pendingAlternativeParentId);
+                            if (parentItem && parentItem.scenario === pendingItemData.scenario) {
+                                alert(`Validation Error: Alternative item cannot have the same scenario (${pendingItemData.scenario}) as its Main item.`);
+                                btnConfirmSave.textContent = '✓ CONFIRM & SAVE';
+                                btnConfirmSave.disabled = false;
+                                return;
+                            }
                             pendingItemData.type = 'Alternative';
                             pendingItemData.parent_id = window.pendingAlternativeParentId;
                         } else {
