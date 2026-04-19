@@ -1,6 +1,7 @@
 export const Store = {
     state: {
         config: {},
+        renders: [],
         items: [],
         currentRoom: 'All',
         currentStore: 'All',
@@ -32,28 +33,33 @@ export const Store = {
 
     getBudgetStats() {
         const stats = {
-            total: 0,
-            spent: 0,
-            remaining: 0
+            Premium: { total: 0, spent: 0, remaining: 0 },
+            Balanced: { total: 0, spent: 0, remaining: 0 },
+            Pragmatic: { total: 0, spent: 0, remaining: 0 }
         };
 
         this.state.items.forEach(item => {
-            if (String(item.type).toLowerCase() === 'alternative') {
-                return;
+            let scenario = item.scenario;
+            if (!scenario || !['Premium', 'Balanced', 'Pragmatic'].includes(scenario)) {
+                scenario = 'Balanced';
             }
 
             const isPurchased = item.is_purchased === true || String(item.is_purchased).toLowerCase() === 'true';
             const itemPrice = Number(item.price) || 0;
-            const itemActualPrice = item.actual_price !== undefined ? Number(item.actual_price) : itemPrice;
+
+            let itemActualPrice = Number(item.actual_price);
+            if (!itemActualPrice) {
+                itemActualPrice = itemPrice;
+            }
+
+            stats[scenario].total += itemPrice;
 
             if (isPurchased) {
-                stats.spent += itemActualPrice;
-            } else {
-                stats.remaining += itemPrice;
+                stats[scenario].spent += itemActualPrice;
             }
-        });
 
-        stats.total = stats.spent + stats.remaining;
+            stats[scenario].remaining = stats[scenario].total - stats[scenario].spent;
+        });
 
         return stats;
     }

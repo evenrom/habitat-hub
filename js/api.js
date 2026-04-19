@@ -30,6 +30,7 @@ export async function fetchAPI(action, payload = {}) {
         return data;
     } catch (error) {
         console.error('API Error:', error);
+        alert(`API Error: ${error.message || 'An error occurred during the API call.'}`);
         throw error; // Propagate error
     }
 }
