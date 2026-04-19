@@ -1,28 +1,33 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif:ital,wght@0,400;0,700;1,400&display=swap');
+
 :root {
-    /* HDS Color Palette */
-    --onyx: #121212;
-    --sage-green: #9CAF88;
-    --glass-surface: rgba(255, 255, 255, 0.03);
-    --glass-dark: rgba(18, 18, 18, 0.6);
-    --border-light: rgba(255, 255, 255, 0.1);
-    --text-primary: #FFFFFF;
-    --text-secondary: rgba(255, 255, 255, 0.6);
+    /* The Tactile Atelier Color Palette */
+    --surface: #17130f;
+    --cards: #292420;
+    --actions: #567357;
+    --accents: #adab9e;
+    --text-light: #ebe1da;
     
     /* Typography */
     --font-main: 'Manrope', sans-serif;
+    --font-headings: 'Noto Serif', serif;
     --spacing-sm: 0.5rem;
     --spacing-md: 1rem;
     --spacing-lg: 2rem;
 }
 
 body {
-    background-color: var(--onyx);
-    color: var(--text-primary);
+    background-color: var(--surface);
+    color: var(--text-light);
     font-family: var(--font-main);
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6, .brand {
+    font-family: var(--font-headings);
 }
 
 /* --- Top Navigation --- */
@@ -34,15 +39,15 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: var(--spacing-md) var(--spacing-lg);
-    background: var(--glass-dark);
+    background: rgba(23, 19, 15, 0.6);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-    border-bottom: 1px solid var(--border-light);
+    border-bottom: 1px solid rgba(173, 171, 158, 0.15);
 }
 
 .brand {
     font-weight: 700;
-    font-size: 16px;
+    font-size: 18px;
     letter-spacing: 0.05em;
 }
 
@@ -54,16 +59,17 @@ body {
 .stat {
     font-size: 12px;
     font-weight: 500;
-    color: var(--text-secondary);
+    color: var(--accents);
     letter-spacing: 0.1em;
     text-transform: uppercase;
 }
 
 .stat span {
-    color: var(--text-primary);
+    color: var(--text-light);
     font-weight: 700;
     font-size: 14px;
     margin-left: 4px;
+    font-family: var(--font-main);
 }
 
 /* --- Interactive Map --- */
@@ -73,21 +79,19 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: var(--onyx);
+    background-color: var(--surface);
     overflow: hidden;
-    border-bottom: 1px solid var(--border-light);
     position: relative;
 }
 
-/* Invert SVG to white lines */
+/* Invert SVG appropriately */
 #hero-map svg {
     width: 100%;
     height: 100%;
     object-fit: contain;
-    filter: invert(1) opacity(0.5); 
 }
 
-/* Hitboxes (Using mathematically inverted Sage Green) */
+/* Hitboxes */
 .room-hitbox {
     cursor: pointer;
     pointer-events: bounding-box;
@@ -98,18 +102,29 @@ body {
 .room-hitbox:hover,
 .room-hitbox.active,
 .room-hitbox.selected {
-    fill: rgba(99, 80, 119, 0.4); /* Inverts exactly to Sage Green! */
+    fill: rgba(86, 115, 87, 0.4);
+}
+
+/* Render Nodes */
+.render-node {
+    fill: var(--actions);
+    cursor: pointer;
+    transition: filter 0.3s ease;
+}
+
+.render-node:hover {
+    filter: drop-shadow(0 0 15px rgba(86, 115, 87, 0.4));
 }
 
 /* --- Selected Products Carousel --- */
 #room-details {
     padding: var(--spacing-lg);
-    background-color: var(--onyx);
+    background-color: var(--surface);
 }
 
 #room-details h2 {
     font-size: 24px;
-    font-weight: 600;
+    font-weight: 400;
     letter-spacing: -0.02em;
     margin-bottom: var(--spacing-md);
     margin-top: 0;
@@ -122,32 +137,29 @@ body {
     gap: var(--spacing-md);
     overflow-x: auto;
     padding-bottom: var(--spacing-md);
-    scrollbar-width: none; /* Hide scrollbar */
+    scrollbar-width: none;
 }
 .carousel::-webkit-scrollbar { display: none; }
 
 .carousel-item {
     flex: 0 0 280px;
-    background: var(--glass-surface);
-    border: 1px solid var(--border-light);
+    background: var(--cards);
     border-radius: 12px;
     overflow: hidden;
-    backdrop-filter: blur(24px);
-    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
     position: relative;
     cursor: pointer;
+    border: none;
 }
 
-/* Lume Effect on Hover */
 .carousel-item:hover {
     transform: translateY(-4px);
-    border-color: rgba(156, 175, 136, 0.4); /* Sage Green border */
-    box-shadow: 0 10px 30px rgba(156, 175, 136, 0.1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 .carousel-item img {
     width: 100%;
-    height: 220px;
+    aspect-ratio: 4 / 3;
     object-fit: cover;
     opacity: 0.85;
     transition: opacity 0.3s ease;
@@ -160,7 +172,7 @@ body {
     bottom: 0;
     width: 100%;
     padding: var(--spacing-lg) var(--spacing-md) var(--spacing-md);
-    background: linear-gradient(to top, rgba(18,18,18,0.95) 20%, transparent);
+    background: linear-gradient(to top, rgba(23,19,15,0.95) 20%, transparent);
     box-sizing: border-box;
 }
 
@@ -172,9 +184,10 @@ body {
 
 .carousel-item p {
     margin: 0;
-    color: var(--sage-green);
+    color: var(--actions);
     font-weight: 700;
     font-size: 14px;
+    font-family: var(--font-main);
 }
 
 .carousel-item.purchased {
@@ -190,11 +203,11 @@ body {
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    background-color: var(--sage-green);
-    color: var(--onyx);
+    background-color: var(--actions);
+    color: var(--text-light);
     border: none;
     font-size: 28px;
-    box-shadow: 0 4px 20px rgba(156, 175, 136, 0.3);
+    box-shadow: 0 4px 20px rgba(86, 115, 87, 0.3);
     cursor: pointer;
     z-index: 100;
     display: flex;
@@ -217,52 +230,36 @@ body {
 
 .modal.hidden { display: none; }
 
-.modal-content {
-    background: var(--glass-dark);
+.modal-content, .tooltip {
+    background: rgba(23, 19, 15, 0.6);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(173, 171, 158, 0.15);
     padding: var(--spacing-lg);
     border-radius: 12px;
     max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;
     position: relative;
-    border: 1px solid var(--border-light);
     box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
 }
 
 .close-button {
     position: absolute; top: 15px; right: 20px;
-    font-size: 24px; cursor: pointer; color: var(--text-secondary);
+    font-size: 24px; cursor: pointer; color: var(--accents);
     transition: color 0.2s;
 }
 
-.close-button:hover { color: var(--text-primary); }
+.close-button:hover { color: var(--text-light); }
 
-#modal-image { width: 100%; border-radius: 8px; margin-bottom: var(--spacing-md); object-fit: cover; }
-.modal-content .price { color: var(--sage-green); font-size: 1.5rem; font-weight: bold; margin: 0 0 10px 0; }
-.details-text a { color: var(--sage-green); text-decoration: none; font-weight: 600; }
+#modal-image { width: 100%; border-radius: 8px; margin-bottom: var(--spacing-md); object-fit: cover; aspect-ratio: 4/3; }
+.modal-content .price { color: var(--actions); font-size: 1.5rem; font-weight: bold; margin: 0 0 10px 0; font-family: var(--font-main); }
+.details-text a { color: var(--actions); text-decoration: none; font-weight: 600; }
 
 /* --- Custom Scrollbar Styling --- */
-::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-}
-
-::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: var(--sage-green);
-}
-
-/* For Firefox */
-* {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
-}
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(173, 171, 158, 0.3); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--actions); }
+* { scrollbar-width: thin; scrollbar-color: rgba(173, 171, 158, 0.3) transparent; }
 
 /* --- Comparison Modal Styles --- */
 .comparison-grid {
@@ -277,7 +274,7 @@ body {
 
 .compare-card {
     background: rgba(255,255,255,0.02);
-    border: 1px solid var(--border-light);
+    border: none;
     border-radius: 12px;
     padding: 16px;
     position: relative;
@@ -295,39 +292,38 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.1em;
     z-index: 2;
+    font-family: var(--font-main);
 }
 
-.compare-badge.current { background: var(--sage-green); color: var(--onyx); }
-.compare-badge.alternative { background: rgba(0,0,0,0.6); color: var(--text-primary); border: 1px solid var(--border-light); }
+.compare-badge.current { background: var(--actions); color: var(--text-light); }
+.compare-badge.alternative { background: rgba(0,0,0,0.6); color: var(--text-light); border: 1px solid rgba(173, 171, 158, 0.15); }
 
 .compare-card img {
-    width: 100%; height: 200px; object-fit: cover; border-radius: 8px; margin-bottom: 16px;
+    width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 8px; margin-bottom: 16px;
 }
 
 .compare-card h3 { margin: 0 0 8px 0; font-size: 16px; font-weight: 600; }
-.compare-details { flex-grow: 1; margin-top: 16px; font-size: 13px; color: var(--text-secondary); }
+.compare-details { flex-grow: 1; margin-top: 16px; font-size: 13px; color: var(--accents); font-family: var(--font-main); }
 
 .swap-button {
     margin-top: 24px; width: 100%;
-    background: transparent; color: var(--text-primary);
-    border: 1px solid var(--sage-green); padding: 12px; border-radius: 8px;
+    background: transparent; color: var(--text-light);
+    border: 1px solid var(--actions); padding: 12px; border-radius: 8px;
     font-family: var(--font-main); font-weight: 600; font-size: 14px;
     cursor: pointer; transition: all 0.2s;
 }
 
-.swap-button:hover {
-    background: var(--sage-green); color: var(--onyx);
-}
+.swap-button:hover { background: var(--actions); color: var(--text-light); }
 
 /* --- New Pill FAB --- */
 .fab-pill {
     position: fixed;
     bottom: var(--spacing-lg);
     right: var(--spacing-lg);
-    background: rgba(18, 18, 18, 0.85);
+    background: rgba(23, 19, 15, 0.85);
     backdrop-filter: blur(12px);
-    border: 1px solid var(--sage-green);
-    color: var(--sage-green);
+    border: 1px solid var(--actions);
+    color: var(--actions);
     padding: 12px 24px;
     border-radius: 30px;
     font-family: var(--font-main);
@@ -342,66 +338,26 @@ body {
     transition: all 0.2s ease;
 }
 
-.fab-pill:hover {
-    background: var(--sage-green);
-    color: var(--onyx);
-}
-
-.fab-pill span {
-    font-size: 18px;
-    line-height: 1;
-}
+.fab-pill:hover { background: var(--actions); color: var(--text-light); }
+.fab-pill span { font-size: 18px; line-height: 1; }
 
 /* --- View Buttons Active State --- */
-.view-btn:hover {
-    color: var(--text-primary) !important;
-}
+.view-btn:hover { color: var(--text-light) !important; }
 .view-btn.active {
     background: rgba(255,255,255,0.1) !important;
-    border-color: var(--border-light) !important;
-    color: var(--text-primary) !important;
+    border-color: rgba(173, 171, 158, 0.15) !important;
+    color: var(--text-light) !important;
 }
 
 /* --- Mobile Responsiveness (Phones) --- */
 @media (max-width: 768px) {
-    header.glass-panel {
-        flex-wrap: wrap;
-        gap: 12px;
-        padding: 12px;
-        justify-content: center;
-    }
-    .brand {
-        width: 100%;
-        text-align: center;
-        margin-bottom: 4px;
-    }
-    #view-toggles {
-        justify-content: center;
-        width: 100%;
-        margin-bottom: 8px;
-    }
-    
-    /* Smaller carousel cards for mobile */
+    header.glass-panel { flex-wrap: wrap; gap: 12px; padding: 12px; justify-content: center; }
+    .brand { width: 100%; text-align: center; margin-bottom: 4px; }
+    #view-toggles { justify-content: center; width: 100%; margin-bottom: 8px; }
     .carousel-item { min-width: 150px; }
-    .carousel-item img { height: 110px; }
     .carousel-item h3 { font-size: 12px; }
-    
-    /* Modals take up more screen on mobile */
-    .modal-content {
-        width: 95%;
-        margin: 5% auto;
-        padding: 16px;
-    }
-    
-    #hero-map {
-        height: 350px; /* Compress the map vertically */
-    }
+    .modal-content { width: 95%; margin: 5% auto; padding: 16px; }
+    #hero-map { height: 350px; }
 }
-/* --- Purchased Item State (Carousel) --- */
-.carousel-item.purchased {
-    opacity: 0.5;
-    transition: opacity 0.3s ease;
-}
-.carousel-item.purchased:hover {
-    opacity: 0.8;
-}
+
+.carousel-item.purchased:hover { opacity: 0.8; }

@@ -2,6 +2,80 @@ import { Store } from './store.js';
 import { fetchAPI } from './api.js';
 
 export const UI = {
+    lazyLoadObserver: null,
+
+    initLazyLoading() {
+        if (!this.lazyLoadObserver) {
+            this.lazyLoadObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        if (img.dataset.src) {
+                            img.src = img.dataset.src;
+                            img.removeAttribute('data-src');
+                        }
+                        observer.unobserve(img);
+                    }
+                });
+            }, { rootMargin: '0px 0px 50px 0px' });
+        }
+    },
+
+    lazyLoadImage(imgElement) {
+        this.initLazyLoading();
+        this.lazyLoadObserver.observe(imgElement);
+    },
+
+    initRenderNodes(renders) {
+        if (!renders || !Array.isArray(renders)) return;
+        const nodes = document.querySelectorAll('.render-node');
+        nodes.forEach(node => {
+            const nodeId = node.id;
+            const renderData = renders.find(r => String(r.node_id) === String(nodeId));
+            if (renderData) {
+                node.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    UI.openRenderModal(renderData);
+                });
+            } else {
+                // Dim nodes with no data
+                node.style.opacity = '0.3';
+            }
+        });
+    },
+
+    openRenderModal(renderData) {
+        let modal = document.getElementById('render-modal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'render-modal';
+            modal.className = 'modal hidden';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 800px; padding: 0; overflow: hidden; border: 1px solid rgba(173, 171, 158, 0.15);">
+                    <span class="close-button" style="z-index: 10; background: rgba(0,0,0,0.5); border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; top: 10px; right: 10px;">&times;</span>
+                    <img id="render-modal-img" style="width: 100%; height: auto; display: block; margin: 0;" src="" alt="Render View">
+                    <div style="padding: 16px; background: rgba(23, 19, 15, 0.9);">
+                        <h3 id="render-modal-title" style="margin: 0; font-family: var(--font-headings); color: var(--text-light);"></h3>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            modal.querySelector('.close-button').addEventListener('click', () => {
+                modal.classList.add('hidden');
+            });
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.classList.add('hidden');
+            });
+        }
+
+        const imgUrl = (renderData.image_id) ? `https://lh3.googleusercontent.com/d/${renderData.image_id}` : 'https://via.placeholder.com/800x600';
+        document.getElementById('render-modal-img').src = imgUrl;
+        document.getElementById('render-modal-title').textContent = renderData.title || 'Render View';
+
+        modal.classList.remove('hidden');
+    },
+
     updateBudget(stats) {
         // Deprecated: Budget display moved to the Finance Dashboard modal.
         return;
@@ -148,12 +222,15 @@ export const UI = {
                 card.style.cursor = 'pointer';
 
                 card.innerHTML = `
-                    <img src="${imgUrl}" alt="${item.name || 'Item'}">
+                    <img data-src="${imgUrl}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="${item.name || 'Item'}">
                     <div class="details">
                         <h3 style="margin: 0; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.name || 'Unnamed Item'}</h3>
-                        <p style="margin: 4px 0; color: var(--sage-green); font-weight: bold;">₪${new Intl.NumberFormat('en-US').format(item.price || 0)}</p>
+                        <p style="margin: 4px 0; color: var(--actions); font-weight: bold;">₪${new Intl.NumberFormat('en-US').format(item.price || 0)}</p>
                     </div>
                 `;
+
+                const imgElem = card.querySelector('img');
+                UI.lazyLoadImage(imgElem);
 
                 card.addEventListener('click', () => UI.openModal(item, imgUrl));
 
@@ -424,73 +501,32 @@ export const UI = {
         const container = document.getElementById('finance-details');
         if (!container) return;
 
-        let roomStats = {};
-        // חישוב כולל לפרויקט
-        let grandTotalEst = 0;
-        let grandTotalSpent = 0;
-
-        items.forEach(item => {
-            const room = item.room || 'Unassigned';
-            if (!roomStats[room]) {
-                roomStats[room] = { estimated: 0, spent: 0 };
-            }
-            
-            const price = Number(item.price) || 0;
-            const actualPrice = Number(item.actual_price) || price;
-            const isPurchased = item.is_purchased === true || String(item.is_purchased).toLowerCase() === 'true';
-
-            roomStats[room].estimated += price;
-            grandTotalEst += price;
-
-            if (isPurchased) {
-                roomStats[room].spent += actualPrice;
-                grandTotalSpent += actualPrice;
-            }
-        });
-
-        let grandTotalRem = Math.max(0, grandTotalEst - grandTotalSpent);
-        let grandPercent = grandTotalEst > 0 ? Math.min((grandTotalSpent / grandTotalEst) * 100, 100) : 0;
-
+        const budgetStats = Store.getBudgetStats();
         let html = '<div style="display: flex; flex-direction: column; gap: 16px;">';
 
-        // --- Grand Total Card (הסיכום הראשי) ---
-        html += `
-        <div style="background: rgba(169, 191, 168, 0.1); border: 1px solid var(--sage-green); border-radius: 8px; padding: 16px; margin-bottom: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-                <strong style="font-size: 16px; color: var(--sage-green); text-transform: uppercase; letter-spacing: 0.1em;">Total Project</strong>
-                <span style="font-size: 14px; color: var(--text-primary); font-weight: 600;">Est: ₪${new Intl.NumberFormat('en-US').format(grandTotalEst)}</span>
-            </div>
-            <div style="width: 100%; background: rgba(0,0,0,0.5); height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 12px;">
-                <div style="width: ${grandPercent}%; height: 100%; background: var(--sage-green); transition: width 0.5s ease-out;"></div>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-size: 14px;">
-                <span style="color: var(--sage-green); font-weight: 600;">Spent: ₪${new Intl.NumberFormat('en-US').format(grandTotalSpent)}</span>
-                <span style="color: var(--text-secondary);">Remaining: ₪${new Intl.NumberFormat('en-US').format(grandTotalRem)}</span>
-            </div>
-        </div>
-        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 0 0 8px 0;">
-        `;
+        const scenarios = ['Premium', 'Balanced', 'Pragmatic'];
 
-        // --- Room Breakdown (פירוט חדרים) ---
-        for (const [room, stats] of Object.entries(roomStats)) {
-            const percent = stats.estimated > 0 ? Math.min((stats.spent / stats.estimated) * 100, 100) : 0;
-            const remaining = Math.max(0, stats.estimated - stats.spent);
+        scenarios.forEach(scenario => {
+            const stats = budgetStats[scenario];
+            if (!stats) return;
+
+            const percent = stats.total > 0 ? Math.min((stats.spent / stats.total) * 100, 100) : 0;
             
             html += `
-            <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-light); border-radius: 8px; padding: 16px;">
+            <div style="background: rgba(23, 19, 15, 0.4); border: 1px solid rgba(173, 171, 158, 0.15); border-radius: 8px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-                    <strong style="font-size: 14px; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.05em;">${room}</strong>
-                    <span style="font-size: 12px; color: var(--text-secondary);">Est: ₪${new Intl.NumberFormat('en-US').format(stats.estimated)}</span>
+                    <strong style="font-size: 16px; color: var(--actions); text-transform: uppercase; letter-spacing: 0.1em; font-family: var(--font-headings);">${scenario} Scenario</strong>
+                    <span style="font-size: 14px; color: var(--text-light); font-weight: 600; font-family: var(--font-main);">Est: ₪${new Intl.NumberFormat('en-US').format(stats.total)}</span>
                 </div>
-                <div style="width: 100%; background: rgba(0,0,0,0.5); height: 6px; border-radius: 3px; overflow: hidden; margin-bottom: 12px;">
-                    <div style="width: ${percent}%; height: 100%; background: var(--sage-green); transition: width 0.5s ease-out;"></div>
+                <div style="width: 100%; background: rgba(0,0,0,0.5); height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 12px;">
+                    <div style="width: ${percent}%; height: 100%; background: var(--actions); transition: width 0.5s ease-out;"></div>
                 </div>
-                <div style="display: flex; justify-content: space-between; font-size: 13px;">
-                    <span style="color: var(--sage-green); font-weight: 600;">Spent: ₪${new Intl.NumberFormat('en-US').format(stats.spent)}</span>
-                    <span style="color: var(--text-secondary);">Remaining: ₪${new Intl.NumberFormat('en-US').format(remaining)}</span>
+                <div style="display: flex; justify-content: space-between; font-size: 14px; font-family: var(--font-main);">
+                    <span style="color: var(--actions); font-weight: 600;">Spent: ₪${new Intl.NumberFormat('en-US').format(stats.spent)}</span>
+                    <span style="color: var(--accents);">Remaining: ₪${new Intl.NumberFormat('en-US').format(stats.remaining)}</span>
                 </div>
             </div>`;
-        }
+        });
         
         html += '</div>';
         container.innerHTML = html;
