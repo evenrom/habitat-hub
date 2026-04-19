@@ -1,0 +1,45 @@
+# Implementation Brief: Habitat (Amy's Workflow)
+
+## 1. Important Framing
+This project is optimized for a **web-based development flow**. All frontend changes are managed directly within the GitHub repository, and backend logic resides in Google Apps Script.
+
+## 2. Selected Stack
+* **TPM Assigned:** Amy (Jules/GAS Specialist).
+* **Frontend:** HTML5, CSS3, Vanilla ES6. Managed directly in GitHub.
+* **Backend:** Apps Script (REST API).
+* **Database:** Google Sheets.
+
+## 3. Tech Constraints & Performance
+* **Intersection Observer:** Essential for lazy-loading Drive images (Render Nodes and Item Cards) to avoid 403 Rate Limit errors.
+* **Drive Integration:** All renders and images are fetched via Google Drive ID.
+
+## 4. Core Logic & Schema
+### Investment Engine
+* **Premium Total:** Sum of prices for items marked 'Premium'.
+* **Balanced Total:** Sum of prices for items marked 'Balanced'.
+* **Pragmatic Total:** Sum of prices for items marked 'Pragmatic'.
+* **Spent:** Sum of `actual_price` where `is_purchased` is true.
+
+### Validation
+* `ui.js` must validate that an item and its alternatives do not duplicate a `scenario` value.
+
+## 5. Database Schema (Items Sheet)
+1. `id` (UUID)
+2. `room` (Foyer/Kitchen/etc)
+3. `type` (Main/Alternative)
+4. `parent_id` (UUID for Alts)
+5. `name`
+6. `price`
+7. `dim_l`, `dim_w`, `dim_h`
+8. `image_id` (Drive ID)
+9. `product_url`
+10. `store`
+11. `timestamp`
+12. `is_purchased` (Boolean)
+13. `actual_price`
+14. `scenario` (Premium/Balanced/Pragmatic)
+
+## 6. Renders Sheet
+1. `node_id` (Matches SVG circle ID)
+2. `drive_image_id`
+3. `room_context`

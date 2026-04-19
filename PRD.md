@@ -1,49 +1,33 @@
-# PRD: Habitat Hub v2.0
-**Document Status:** Final Approved
+# PRD: Habitat
+**Status:** Updated for Atelier Workflow
 **Design Language:** The Tactile Atelier (Dark Theme, Glassmorphism)
 
 ## 1. Product Paradigm & Workflow
-* **Primary Use Case:** Internal tool for interior design curation and budget tracking.
-* **Platform Focus:** Web-first curation (Desktop) via clipboard/URL. Mobile execution for status updates.
-* **Core Flow:** Asymmetric workflow separating the "Curation Phase" (heavy data entry, AI extraction) from the "Execution Phase" (shopping, tracking, toggling purchased items).
+* **App Name:** Habitat.
+* **Primary Use Case:** Premium interior design curation and investment tracking.
+* **Core Flow:** Asymmetric workflow. Desktop handles "AI Extraction" (high-volume data entry) and spatial planning. Mobile handles "Investment Overview" (real-time budget tracking during shopping) and status updates.
 
-## 2. Architecture & Tech Stack (Zero-Cost)
-* **Frontend:** Vanilla HTML5, CSS3, ES6+ JavaScript. No frameworks (React/Vue).
-* **Backend:** Google Apps Script (GAS) acting as an API Gateway (Passcode protected).
-* **Database:** Google Sheets ('Config' and 'Items' tabs).
-* **Storage:** Google Drive (Image hosting via Thumbnail API).
-* **Hosting:** GitHub Pages.
-* **AI Engine:** Google Gemini 2.5 Flash API (Text + Vision).
+## 2. Architecture & Tech Stack (Amy's Setup)
+* **Database:** Google Sheets ('Items', 'Config', 'Renders').
+* **Backend:** Google Apps Script (GAS) acting as a Headless REST API.
+* **Frontend:** Vanilla HTML/JS/CSS hosted directly on GitHub Pages.
+* **AI Engine:** Google Gemini API for metadata extraction.
+* **Storage:** Google Drive for furniture images and spatial renders.
 
-## 3. Design System: "The Tactile Atelier"
-* **Layout Base:** LTR directionality, passively supporting RTL text inputs (`dir="auto"`).
-* **Color Palette:**
-    * Background: `#292420` (Warm Obsidian).
-    * Primary CTA: `#567357` (Botanical Green).
-    * Accents: `#adab9e` (Sage/Metallic).
-    * Text: `#dcd8d7` (Light Grey). No `#FFFFFF`.
-* **Surface & Elevation (No-Line Rule):** Hierarchy defined by background color shifts (`surface_container_low`, `surface_container_highest`) and `backdrop-filter: blur(16px)` for floating elements (Glassmorphism). 1px ghost borders (`outline_variant` at 15% opacity) permitted.
-* **Typography:** Manrope font. Display sizes for budgets, "blueprint style" ALL CAPS for labels.
+## 3. Key Features
+* **Investment Overview (3-Tier Budgeting):**
+    * Parallel tracking of three scenarios: **Premium**, **Balanced**, and **Pragmatic**.
+    * Real-time calculation of "Spent" capital vs. "Estimated" for each tier.
+* **Spatial Canvas (SVG):**
+    * Interactive blueprint with 4:3 image cards.
+    * Distinct hitboxes for 'Kitchen' and 'Foyer'.
+    * **Render Nodes:** Glowing points on the map that trigger high-res visualizations from Google Drive.
+* **AI Extraction:**
+    * Paste URL/Image to automatically parse dimensions, store, and price.
+* **Scenario Validation:**
+    * Logic preventing a Main item and its Alternatives from occupying the same scenario tier (e.g., if Main is 'Balanced', Alts must be 'Premium' or 'Pragmatic').
 
-## 4. Core Features & UX Mechanics
-### A. SVG Interactive Navigation (Hero Section)
-* Hardcoded SVG floor plan acting as the primary navigation hub.
-* Rooms defined by injected `<polygon data-room-id="...">` hitboxes.
-* **Desktop:** Hover applies a translucent fill and ghost border. Click navigates to the room's detail view.
-* **Mobile (2-Tap Rule):** First tap applies the active state and shows a tooltip (Room Name + Item Count). Second tap or "Enter" button executes navigation.
-
-### B. "Magic AI Add" (Data Entry)
-* Glassmorphism modal prioritizing speed.
-* **Input Hierarchy:** URL input -> Clipboard Image Paste / Drag & Drop.
-* **Fallback Protocol:** If the AI API times out (8 seconds) or fails, gracefully degrade to the manual data entry form without blocking the user.
-
-### C. Data Visualization & List Management
-* **Sticky Budget:** Top header displaying "TOTAL", "SPENT", "REMAINING" floats above content. Recalculates dynamically.
-* **Horizontal Carousels:** Room items are displayed in an overflow-x scroll container.
-* **Card UI:** 3:2 aspect ratio (`object-fit: cover`), title and price overlay via dark linear gradient.
-* **Nested Alternatives:** Alternative items are grouped visually under the Main Item (scaled down, lower elevation) and do not clutter the primary horizontal flow or budget unless swapped.
-* **Purchased State:** Marked items receive `opacity: 0.5`, move to the end of the carousel, and update the sticky budget immediately. Add a global toggle to "Hide Purchased".
-
-## 5. State Management & Modularity
-* **Optimistic UI:** DOM updates (Purchase toggles, adding items) occur immediately in the ViewManager before waiting for GAS responses.
-* **Modular Architecture:** The JS codebase must be separated (e.g., `api.js`, `store.js`, `ui.js`, `app.js`) to prevent a monolithic file structure.
+## 4. User Interface Requirements
+* **Heavy Glassmorphism:** Tooltips and modals must have 24px blur and ghost borders.
+* **Strict Ratio:** All item images are enforced at a 4:3 horizontal aspect ratio.
+* **No-Line Layout:** Visual separation via spacing and tonal shifts, not border lines.
