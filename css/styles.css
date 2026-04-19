@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif:ital,wght@0,400;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap');
 
 :root {
     /* The Tactile Atelier Color Palette */
@@ -10,7 +10,6 @@
     
     /* Typography */
     --font-main: 'Manrope', sans-serif;
-    --font-headings: 'Noto Serif', serif;
     --spacing-sm: 0.5rem;
     --spacing-md: 1rem;
     --spacing-lg: 2rem;
@@ -27,7 +26,8 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6, .brand {
-    font-family: var(--font-headings);
+    font-family: var(--font-main);
+    font-weight: 700;
 }
 
 /* --- Top Navigation --- */
@@ -109,6 +109,7 @@ h1, h2, h3, h4, h5, h6, .brand {
 .render-node {
     fill: var(--actions);
     cursor: pointer;
+    pointer-events: bounding-box;
     transition: filter 0.3s ease;
 }
 
