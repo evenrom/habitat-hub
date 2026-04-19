@@ -30,10 +30,14 @@ export const UI = {
         if (!renders || !Array.isArray(renders)) return;
         const nodes = document.querySelectorAll('.render-node');
         nodes.forEach(node => {
-            const nodeId = node.id;
+            const nodeId = node.getAttribute('id');
             const renderData = renders.find(r => String(r.node_id) === String(nodeId));
             if (renderData) {
-                node.addEventListener('click', (e) => {
+                // Remove any pre-existing listeners avoiding duplicates during re-init
+                const newNode = node.cloneNode(true);
+                node.parentNode.replaceChild(newNode, node);
+
+                newNode.addEventListener('click', (e) => {
                     e.preventDefault();
                     UI.openRenderModal(renderData);
                 });
@@ -55,7 +59,7 @@ export const UI = {
                     <span class="close-button" style="z-index: 10; background: rgba(0,0,0,0.5); border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; top: 10px; right: 10px;">&times;</span>
                     <img id="render-modal-img" style="width: 100%; height: auto; display: block; margin: 0;" src="" alt="Render View">
                     <div style="padding: 16px; background: rgba(23, 19, 15, 0.9);">
-                        <h3 id="render-modal-title" style="margin: 0; font-family: var(--font-headings); color: var(--text-light);"></h3>
+                        <h3 id="render-modal-title" style="margin: 0; font-family: var(--font-main); font-weight: 700; color: var(--text-light);"></h3>
                     </div>
                 </div>
             `;
@@ -69,7 +73,7 @@ export const UI = {
             });
         }
 
-        const imgUrl = (renderData.image_id) ? `https://lh3.googleusercontent.com/d/${renderData.image_id}` : 'https://via.placeholder.com/800x600';
+        const imgUrl = (renderData.drive_image_id) ? `https://drive.google.com/uc?export=view&id=${renderData.drive_image_id}` : 'https://via.placeholder.com/800x600';
         document.getElementById('render-modal-img').src = imgUrl;
         document.getElementById('render-modal-title').textContent = renderData.title || 'Render View';
 

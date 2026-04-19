@@ -43,9 +43,13 @@ async function init() {
         const data = await fetchAPI('getInitialData');
         Store.setState({
             config: data.config || {},
+            renders: data.renders || [],
             items: data.items || [],
             isLoading: false
         });
+
+        // Ensure Render Nodes initialized directly after SVG and data loads
+        UI.initRenderNodes(Store.state.renders);
 
         // Populate Store Filter
         const storeFilter = document.getElementById('store-filter');
@@ -76,9 +80,6 @@ async function init() {
 
         // Trigger initial budget render
         UI.updateBudget(Store.getBudgetStats());
-
-        // Initialize Render Nodes (Wait for map rendering cycle first)
-        setTimeout(() => UI.initRenderNodes(Store.state.renders), 100);
 
         // Initial render
         UI.renderCarousel(Store.state.items);
