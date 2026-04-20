@@ -109,13 +109,15 @@ h1, h2, h3, h4, h5, h6, .brand {
 .render-node {
     fill: var(--actions);
     cursor: pointer;
-    pointer-events: auto !important; /* Forces element to receive clicks */
-    transition: transform 0.2s ease, filter 0.2s ease;
+    pointer-events: auto !important;
+    transition: fill 0.3s ease, filter 0.3s ease;
+    transform-origin: center;
+    transform-box: fill-box;
 }
 
 .render-node:hover {
-    transform: scale(1.2);
-    filter: drop-shadow(0 0 8px rgba(86, 115, 87, 0.8));
+    fill: #FFFFFF;
+    filter: drop-shadow(0 0 12px rgba(86, 115, 87, 1));
 }
 
 /* --- Selected Products Carousel --- */
