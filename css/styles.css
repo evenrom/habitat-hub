@@ -147,12 +147,13 @@ h1, h2, h3, h4, h5, h6, .brand {
 #room-details {
     padding: var(--spacing-lg);
     background-color: var(--surface);
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 @media (min-width: 1024px) {
     #room-details {
         grid-column: 2 / 3;
-        overflow-y: auto;
         height: 100%;
         border-left: 1px solid rgba(173, 171, 158, 0.15);
     }
@@ -169,26 +170,21 @@ h1, h2, h3, h4, h5, h6, .brand {
 #room-details.hidden { display: none !important; }
 
 .carousel {
-    display: flex;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
     gap: var(--spacing-md);
     overflow-x: auto;
     padding-bottom: var(--spacing-md);
     scrollbar-width: none;
-}
-
-@media (min-width: 1024px) {
-    .carousel {
-        flex-direction: column;
-        overflow-x: hidden;
-        overflow-y: visible;
-        gap: var(--spacing-lg);
-    }
+    width: 100%;
 }
 
 .carousel::-webkit-scrollbar { display: none; }
 
 .carousel-item {
-    flex: 0 0 280px;
+    flex: 0 0 260px !important;
+    max-width: 260px;
     background: var(--cards);
     border-radius: 12px;
     overflow: hidden;
@@ -196,13 +192,6 @@ h1, h2, h3, h4, h5, h6, .brand {
     position: relative;
     cursor: pointer;
     border: none;
-}
-
-@media (min-width: 1024px) {
-    .carousel-item {
-        flex: none;
-        width: 100%;
-    }
 }
 
 .carousel-item:hover {
