@@ -13,14 +13,15 @@ const { chromium } = require('playwright');
     document.getElementById('room-details').classList.remove('hidden');
     const container = document.getElementById('carousel-container');
     container.innerHTML = `
-      <div class="carousel-item"><div style="height: 200px; background: red;"></div></div>
-      <div class="carousel-item"><div style="height: 200px; background: blue;"></div></div>
-      <div class="carousel-item"><div style="height: 200px; background: green;"></div></div>
+      <div class="carousel-item" style="height: 200px; background: red;"></div>
+      <div class="carousel-item" style="height: 200px; background: blue;"></div>
+      <div class="carousel-item" style="height: 200px; background: green;"></div>
+      <div class="carousel-item" style="height: 200px; background: yellow;"></div>
     `;
   });
   await page.waitForTimeout(500);
 
-  await page.screenshot({ path: 'desktop_view_with_details.png' });
+  await page.screenshot({ path: 'desktop_horizontal_scroll.png' });
 
   await browser.close();
 })();
