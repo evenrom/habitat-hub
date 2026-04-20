@@ -5,6 +5,8 @@ import { UI } from './ui.js';
 async function init() {
     console.log('Habitat-Hub v2.0 App Starting...');
 
+    UI.initEscapeListener();
+
     // Wire UI budget updates to Store
     Store.subscribe((state) => {
         UI.updateBudget(Store.getBudgetStats());

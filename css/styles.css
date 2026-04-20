@@ -25,6 +25,16 @@ body {
     overflow-x: hidden;
 }
 
+@media (min-width: 1024px) {
+    body {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        grid-template-rows: auto 1fr;
+        height: 100vh;
+        overflow: hidden;
+    }
+}
+
 h1, h2, h3, h4, h5, h6, .brand {
     font-family: var(--font-main);
     font-weight: 700;
@@ -43,6 +53,12 @@ h1, h2, h3, h4, h5, h6, .brand {
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border-bottom: 1px solid rgba(173, 171, 158, 0.15);
+}
+
+@media (min-width: 1024px) {
+    .sticky-top {
+        grid-column: 1 / -1;
+    }
 }
 
 .brand {
@@ -82,6 +98,13 @@ h1, h2, h3, h4, h5, h6, .brand {
     background-color: var(--surface);
     overflow: hidden;
     position: relative;
+}
+
+@media (min-width: 1024px) {
+    #hero-map {
+        grid-column: 1 / 2;
+        height: 100%;
+    }
 }
 
 /* Invert SVG appropriately */
@@ -126,6 +149,15 @@ h1, h2, h3, h4, h5, h6, .brand {
     background-color: var(--surface);
 }
 
+@media (min-width: 1024px) {
+    #room-details {
+        grid-column: 2 / 3;
+        overflow-y: auto;
+        height: 100%;
+        border-left: 1px solid rgba(173, 171, 158, 0.15);
+    }
+}
+
 #room-details h2 {
     font-size: 24px;
     font-weight: 400;
@@ -143,6 +175,16 @@ h1, h2, h3, h4, h5, h6, .brand {
     padding-bottom: var(--spacing-md);
     scrollbar-width: none;
 }
+
+@media (min-width: 1024px) {
+    .carousel {
+        flex-direction: column;
+        overflow-x: hidden;
+        overflow-y: visible;
+        gap: var(--spacing-lg);
+    }
+}
+
 .carousel::-webkit-scrollbar { display: none; }
 
 .carousel-item {
@@ -154,6 +196,13 @@ h1, h2, h3, h4, h5, h6, .brand {
     position: relative;
     cursor: pointer;
     border: none;
+}
+
+@media (min-width: 1024px) {
+    .carousel-item {
+        flex: none;
+        width: 100%;
+    }
 }
 
 .carousel-item:hover {
@@ -253,6 +302,22 @@ h1, h2, h3, h4, h5, h6, .brand {
 }
 
 .close-button:hover { color: var(--text-light); }
+
+.close-btn-atelier {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 32px;
+    color: var(--text-light);
+    cursor: pointer;
+    z-index: 1001;
+    transition: color 0.2s;
+    line-height: 1;
+}
+
+.close-btn-atelier:hover {
+    color: var(--actions);
+}
 
 #modal-image { width: 100%; border-radius: 8px; margin-bottom: var(--spacing-md); object-fit: cover; aspect-ratio: 4/3; }
 .modal-content .price { color: var(--actions); font-size: 1.5rem; font-weight: bold; margin: 0 0 10px 0; font-family: var(--font-main); }
