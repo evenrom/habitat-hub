@@ -77,7 +77,7 @@ const { chromium } = require('playwright');
     // Simulate re-population of renders for testing
     await page.evaluate(() => {
         window.Store.setState({ renders: [{ node_id: "test_node", title: "Living Room View", drive_image_id: "fake_id" }] });
-        window.UI.initRenderNodes(window.Store.state.renders);
+        window.UI.initMapEvents(() => {});
     });
 
     // Test Pointer Events and Cursor on Render Node explicitly setting inline bounding box
