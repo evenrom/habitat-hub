@@ -115,7 +115,7 @@ export const UI = {
 
                 if (renderData && renderData.drive_image_id) {
                     console.log(`🛠️ Debug: Match found! Opening Modal for Drive ID: ${renderData.drive_image_id}`);
-                    const imgUrl = `https://drive.google.com/uc?export=view&id=${renderData.drive_image_id}`;
+                    const imgUrl = `https://drive.google.com/thumbnail?id=${renderData.drive_image_id}&sz=w1600`;
                     UI.openRenderModal(imgUrl);
                 } else {
                     console.error(`❌ Error: No matching render data found for node ID: ${nodeId}`);

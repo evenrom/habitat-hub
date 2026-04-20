@@ -107,7 +107,7 @@ const { chromium } = require('playwright');
        const modal = document.getElementById('render-modal');
        if (!modal || modal.classList.contains('hidden')) return false;
        const img = document.getElementById('render-modal-img');
-       return img.src.includes('drive.google.com/uc?export=view&id=fake_id');
+       return img.src.includes('drive.google.com/thumbnail?id=fake_id&sz=w1600');
     });
     console.log('Modal visible and mapped via delegation:', isModalVisibleAndHasCorrectSrc);
     if (!isModalVisibleAndHasCorrectSrc) throw new Error('Modal did not open or src is incorrect. Delegation failed.');
