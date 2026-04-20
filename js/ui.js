@@ -4,6 +4,18 @@ import { fetchAPI } from './api.js';
 export const UI = {
     lazyLoadObserver: null,
 
+    initEscapeListener() {
+        if (!this.escapeListenerAttached) {
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    const modals = document.querySelectorAll('.modal:not(.hidden)');
+                    modals.forEach(modal => modal.classList.add('hidden'));
+                }
+            });
+            this.escapeListenerAttached = true;
+        }
+    },
+
     initLazyLoading() {
         if (!this.lazyLoadObserver) {
             this.lazyLoadObserver = new IntersectionObserver((entries, observer) => {
@@ -36,8 +48,8 @@ export const UI = {
             renderModal.id = 'render-modal';
             renderModal.className = 'modal hidden';
             renderModal.innerHTML = `
-                <div class="modal-content" style="background: transparent; border: none; box-shadow: none; max-width: 90%; text-align: center;">
-                    <span class="close-button" id="close-render-modal" style="right: 0; top: -40px; font-size: 32px; color: #FFF; position: absolute; cursor: pointer;">&times;</span>
+                <div class="modal-content" style="background: transparent; border: none; box-shadow: none; max-width: 90%; text-align: center; position: relative;">
+                    <span class="close-btn-atelier" id="close-render-modal" style="right: 0; top: -40px;">&times;</span>
                     <img id="render-modal-img" src="" style="width: 100%; max-height: 85vh; object-fit: contain; border-radius: 8px;">
                 </div>
             `;
@@ -156,6 +168,20 @@ export const UI = {
                 }
             });
         });
+
+        // 3. Background Reset Event
+        const heroMap = document.getElementById('hero-map');
+        if (heroMap) {
+            heroMap.addEventListener('click', (e) => {
+                if (!e.target.closest('.room-hitbox') && !e.target.closest('.render-node')) {
+                    console.log("🛠️ Debug: Clicked map background, resetting state.");
+                    Store.setState({ viewMode: 'rooms', currentRoom: 'All' });
+                    document.querySelectorAll('.room-hitbox').forEach(hb => hb.classList.remove('selected', 'active'));
+                    const mainItems = Store.state.items.filter(item => String(item.type).toLowerCase() !== 'alternative');
+                    UI.renderCarousel(mainItems);
+                }
+            });
+        }
     },
 
     renderCarousel(items) {
@@ -441,11 +467,15 @@ export const UI = {
             });
         });
         
+        // Ensure close button uses new class
+        let closeBtn = modal.querySelector('.close-button, .close-btn-atelier');
+        if (closeBtn) {
+            closeBtn.className = 'close-btn-atelier';
+            closeBtn.onclick = () => modal.classList.add('hidden');
+        }
+
         modal.classList.remove('hidden');
         
-        // מנגנון סגירה
-        const closeBtn = modal.querySelector('.close-button');
-        closeBtn.onclick = () => modal.classList.add('hidden');
         window.onclick = (event) => {
             if (event.target === modal) modal.classList.add('hidden');
         };
