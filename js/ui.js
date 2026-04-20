@@ -26,75 +26,38 @@ export const UI = {
         this.lazyLoadObserver.observe(imgElement);
     },
 
-    initRenderNodes(renders) {
-        if (!renders || !Array.isArray(renders)) return;
 
-        const mapContainer = document.getElementById('hero-map');
-        if (!mapContainer) return;
+    openRenderModal(imgUrl) {
+        let renderModal = document.getElementById('render-modal');
 
-        // Remove old delegated listener if exists to prevent duplicates on re-render
-        if (this._renderNodeListener) {
-            mapContainer.removeEventListener('click', this._renderNodeListener);
-        }
-
-        // Create new delegated listener
-        this._renderNodeListener = (e) => {
-            const node = e.target.closest('.render-node');
-            if (!node) return;
-
-            e.preventDefault();
-            const nodeId = node.getAttribute('id');
-            const renderData = renders.find(r => String(r.node_id) === String(nodeId));
-
-            if (renderData) {
-                UI.openRenderModal(renderData);
-            }
-        };
-
-        mapContainer.addEventListener('click', this._renderNodeListener);
-
-        // Style the nodes visually on initialization
-        const nodes = document.querySelectorAll('.render-node');
-        nodes.forEach(node => {
-            const nodeId = node.getAttribute('id');
-            const renderData = renders.find(r => String(r.node_id) === String(nodeId));
-            if (!renderData) {
-                // Dim nodes with no data mapping
-                node.style.opacity = '0.3';
-            }
-        });
-    },
-
-    openRenderModal(renderData) {
-        let modal = document.getElementById('render-modal');
-        if (!modal) {
-            modal = document.createElement('div');
-            modal.id = 'render-modal';
-            modal.className = 'modal hidden';
-            modal.innerHTML = `
-                <div class="modal-content" style="max-width: 800px; padding: 0; overflow: hidden; border: 1px solid rgba(173, 171, 158, 0.15);">
-                    <span class="close-button" style="z-index: 10; background: rgba(0,0,0,0.5); border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; top: 10px; right: 10px;">&times;</span>
-                    <img id="render-modal-img" style="width: 100%; height: auto; display: block; margin: 0;" src="" alt="Render View">
-                    <div style="padding: 16px; background: rgba(23, 19, 15, 0.9);">
-                        <h3 id="render-modal-title" style="margin: 0; font-family: var(--font-main); font-weight: 700; color: var(--text-light);"></h3>
-                    </div>
+        // Inject modal if it doesn't exist
+        if (!renderModal) {
+            renderModal = document.createElement('div');
+            renderModal.id = 'render-modal';
+            renderModal.className = 'modal hidden';
+            renderModal.innerHTML = `
+                <div class="modal-content" style="background: transparent; border: none; box-shadow: none; max-width: 90%; text-align: center;">
+                    <span class="close-button" id="close-render-modal" style="right: 0; top: -40px; font-size: 32px; color: #FFF; position: absolute; cursor: pointer;">&times;</span>
+                    <img id="render-modal-img" src="" style="width: 100%; max-height: 85vh; object-fit: contain; border-radius: 8px;">
                 </div>
             `;
-            document.body.appendChild(modal);
+            document.body.appendChild(renderModal);
 
-            modal.querySelector('.close-button').addEventListener('click', () => {
-                modal.classList.add('hidden');
+            document.getElementById('close-render-modal').addEventListener('click', () => {
+                renderModal.classList.add('hidden');
+                document.getElementById('render-modal-img').src = ''; // Clear memory
             });
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) modal.classList.add('hidden');
+            renderModal.addEventListener('click', (e) => {
+                if (e.target === renderModal) {
+                    renderModal.classList.add('hidden');
+                    document.getElementById('render-modal-img').src = '';
+                }
             });
         }
 
-        const imgUrl = (renderData.drive_image_id) ? `https://drive.google.com/uc?export=view&id=${renderData.drive_image_id}` : 'https://via.placeholder.com/800x600';
-        document.getElementById('render-modal-img').src = imgUrl;
-        document.getElementById('render-modal-title').textContent = renderData.title || 'Render View';
-
-        modal.classList.remove('hidden');
+        const imgEl = document.getElementById('render-modal-img');
+        imgEl.src = imgUrl;
+        renderModal.classList.remove('hidden');
     },
 
     updateBudget(stats) {
@@ -131,6 +94,9 @@ export const UI = {
     },
 
     initMapEvents(onRoomSelect) {
+        const mapContainer = document.getElementById('hero-map');
+        if (!mapContainer) return;
+
         const hitboxes = document.querySelectorAll('.room-hitbox');
         const isMobile = window.matchMedia('(pointer: coarse)').matches;
 
@@ -146,8 +112,43 @@ export const UI = {
             });
         });
 
-        hitboxes.forEach(hitbox => {
-            hitbox.addEventListener('click', (e) => {
+        // Optional: Ensure nodes visually present mapping states dynamically upon state hydration
+        // This relies on subscribing to the Store since map events initialize before data hydration
+        Store.subscribe((state) => {
+            const nodes = document.querySelectorAll('.render-node');
+            const renders = state.renders || [];
+            nodes.forEach(node => {
+                const nodeId = node.getAttribute('id');
+                const renderData = renders.find(r => String(r.node_id) === String(nodeId));
+                if (!renderData) {
+                    node.style.opacity = '0.3';
+                } else {
+                    node.style.opacity = '1';
+                }
+            });
+        });
+
+        mapContainer.addEventListener('click', (e) => {
+            // 1. Check for Render Node click first
+            const renderNode = e.target.closest('.render-node');
+            if (renderNode) {
+                e.stopPropagation(); // Stop event from hitting the room hitbox underneath
+                const nodeId = renderNode.getAttribute('id');
+                const renders = Store.state.renders || [];
+                const renderData = renders.find(r => r.node_id === nodeId);
+
+                if (renderData && renderData.drive_image_id) {
+                    const imgUrl = `https://drive.google.com/uc?export=view&id=${renderData.drive_image_id}`;
+                    UI.openRenderModal(imgUrl);
+                } else {
+                    console.error('Render mapping not found for:', nodeId);
+                }
+                return;
+            }
+
+            // 2. Fallback to existing Room Hitbox logic
+            const hitbox = e.target.closest('.room-hitbox');
+            if (hitbox) {
                 e.preventDefault();
                 const roomId = hitbox.getAttribute('data-room-id');
 
@@ -162,7 +163,7 @@ export const UI = {
                 } else {
                     onRoomSelect(roomId);
                 }
-            });
+            }
         });
     },
 
@@ -363,7 +364,7 @@ export const UI = {
                     const scenarioHtml = `
                         <div style="margin-top: 12px; display: flex; flex-direction: column;">
                             <label style="font-size: 12px; color: var(--text-light); margin-bottom: 4px;">Scenario / Tier</label>
-                            <select id="review-scenario" style="width: 100%; background: transparent; color: white; border: 1px solid rgba(173, 171, 158, 0.15); padding: 8px; border-radius: 4px;">
+                            <select id="review-scenario" style="width: 100%; background: transparent; color: white; border: 1px solid rgba(173, 171, 158, 0.15); padding: 8px; border-radius: 4px; margin-top: 8px;">
                                 <option value="Balanced" style="color: black;">Balanced</option>
                                 <option value="Premium" style="color: black;">Premium</option>
                                 <option value="Pragmatic" style="color: black;">Pragmatic</option>
