@@ -22,6 +22,7 @@
     * Interactive blueprint with 4:3 image cards.
     * Distinct hitboxes for 'Kitchen' and 'Foyer'.
     * **Render Nodes:** Glowing points on the map that trigger high-res visualizations from Google Drive.
+    * **Reset State:** Clicking anywhere on the spatial canvas background (outside of defined room hitboxes and render nodes) must reset the application state to view 'All' rooms and restore the full product carousel.
 * **AI Extraction:**
     * Paste URL/Image to automatically parse dimensions, store, and price.
 * **Scenario Validation:**

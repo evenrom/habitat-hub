@@ -24,3 +24,7 @@
 * **Cards:** Strict 4:3 ratio. Images must use `object-fit: cover`.
 * **Tier Badges:** Minimalist pills for *Premium*, *Balanced*, and *Pragmatic*.
 * **Investment Dashboard:** Clean typography with progress bars for each tier.
+* **Responsive Layout:**
+    * **Desktop/Tablet:** Asymmetric split screen. The Spatial Canvas (SVG Map) occupies the left 2/3 of the viewport. The Furniture Carousel/Details occupy the right 1/3.
+    * **Mobile:** Stacked layout. Map on top, Furniture below.
+* **Modals:** All modals (Item Details, Renders) MUST have a highly visible, persistent 'X' close button in the top corner to ensure easy dismissal.
