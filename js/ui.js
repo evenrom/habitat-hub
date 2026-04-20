@@ -94,63 +94,54 @@ export const UI = {
     },
 
     initMapEvents(onRoomSelect) {
-        const mapContainer = document.getElementById('hero-map');
-        if (!mapContainer) return;
+        console.log("🛠️ Debug: initMapEvents initialized.");
 
+        // 1. Direct Binding for Render Nodes
+        const renderNodes = document.querySelectorAll('.render-node');
+        console.log(`🛠️ Debug: Found ${renderNodes.length} render nodes in the SVG.`);
+
+        renderNodes.forEach(node => {
+            node.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation(); // Block hitbox
+
+                const nodeId = node.getAttribute('id');
+                console.log(`🛠️ Debug: Clicked node -> ${nodeId}`);
+
+                const renders = Store.state.renders || [];
+                console.log(`🛠️ Debug: Current Store.state.renders:`, renders);
+
+                const renderData = renders.find(r => r.node_id === nodeId);
+
+                if (renderData && renderData.drive_image_id) {
+                    console.log(`🛠️ Debug: Match found! Opening Modal for Drive ID: ${renderData.drive_image_id}`);
+                    const imgUrl = `https://drive.google.com/uc?export=view&id=${renderData.drive_image_id}`;
+                    UI.openRenderModal(imgUrl);
+                } else {
+                    console.error(`❌ Error: No matching render data found for node ID: ${nodeId}`);
+                    alert(`Data Mismatch: Clicked ${nodeId}, but it's not in the Database mapping.`);
+                }
+            });
+        });
+
+        // 2. Direct Binding for Room Hitboxes (Existing logic)
         const hitboxes = document.querySelectorAll('.room-hitbox');
         const isMobile = window.matchMedia('(pointer: coarse)').matches;
 
         hitboxes.forEach(hitbox => {
-            if (['path', 'rect', 'circle', 'polygon'].includes(hitbox.tagName.toLowerCase())) {
-                hitbox.setAttribute('vector-effect', 'non-scaling-stroke');
-            }
+            // Apply vector effects...
+            hitbox.setAttribute('vector-effect', 'non-scaling-stroke');
             const children = hitbox.querySelectorAll('*');
             children.forEach(child => {
                 if (child.tagName.match(/^(path|rect|circle|polygon|line|polyline)$/i)) {
                     child.setAttribute('vector-effect', 'non-scaling-stroke');
                 }
             });
-        });
 
-        // Optional: Ensure nodes visually present mapping states dynamically upon state hydration
-        // This relies on subscribing to the Store since map events initialize before data hydration
-        Store.subscribe((state) => {
-            const nodes = document.querySelectorAll('.render-node');
-            const renders = state.renders || [];
-            nodes.forEach(node => {
-                const nodeId = node.getAttribute('id');
-                const renderData = renders.find(r => String(r.node_id) === String(nodeId));
-                if (!renderData) {
-                    node.style.opacity = '0.3';
-                } else {
-                    node.style.opacity = '1';
-                }
-            });
-        });
-
-        mapContainer.addEventListener('click', (e) => {
-            // 1. Check for Render Node click first
-            const renderNode = e.target.closest('.render-node');
-            if (renderNode) {
-                e.stopPropagation(); // Stop event from hitting the room hitbox underneath
-                const nodeId = renderNode.getAttribute('id');
-                const renders = Store.state.renders || [];
-                const renderData = renders.find(r => r.node_id === nodeId);
-
-                if (renderData && renderData.drive_image_id) {
-                    const imgUrl = `https://drive.google.com/uc?export=view&id=${renderData.drive_image_id}`;
-                    UI.openRenderModal(imgUrl);
-                } else {
-                    console.error('Render mapping not found for:', nodeId);
-                }
-                return;
-            }
-
-            // 2. Fallback to existing Room Hitbox logic
-            const hitbox = e.target.closest('.room-hitbox');
-            if (hitbox) {
+            hitbox.addEventListener('click', (e) => {
                 e.preventDefault();
                 const roomId = hitbox.getAttribute('data-room-id');
+                console.log(`🛠️ Debug: Clicked Room Hitbox -> ${roomId}`);
 
                 if (isMobile) {
                     if (hitbox.classList.contains('selected') || hitbox.classList.contains('active')) {
@@ -163,7 +154,7 @@ export const UI = {
                 } else {
                     onRoomSelect(roomId);
                 }
-            }
+            });
         });
     },
 
