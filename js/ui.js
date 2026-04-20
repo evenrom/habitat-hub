@@ -28,21 +28,38 @@ export const UI = {
 
     initRenderNodes(renders) {
         if (!renders || !Array.isArray(renders)) return;
+
+        const mapContainer = document.getElementById('hero-map');
+        if (!mapContainer) return;
+
+        // Remove old delegated listener if exists to prevent duplicates on re-render
+        if (this._renderNodeListener) {
+            mapContainer.removeEventListener('click', this._renderNodeListener);
+        }
+
+        // Create new delegated listener
+        this._renderNodeListener = (e) => {
+            const node = e.target.closest('.render-node');
+            if (!node) return;
+
+            e.preventDefault();
+            const nodeId = node.getAttribute('id');
+            const renderData = renders.find(r => String(r.node_id) === String(nodeId));
+
+            if (renderData) {
+                UI.openRenderModal(renderData);
+            }
+        };
+
+        mapContainer.addEventListener('click', this._renderNodeListener);
+
+        // Style the nodes visually on initialization
         const nodes = document.querySelectorAll('.render-node');
         nodes.forEach(node => {
             const nodeId = node.getAttribute('id');
             const renderData = renders.find(r => String(r.node_id) === String(nodeId));
-            if (renderData) {
-                // Remove any pre-existing listeners avoiding duplicates during re-init
-                const newNode = node.cloneNode(true);
-                node.parentNode.replaceChild(newNode, node);
-
-                newNode.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    UI.openRenderModal(renderData);
-                });
-            } else {
-                // Dim nodes with no data
+            if (!renderData) {
+                // Dim nodes with no data mapping
                 node.style.opacity = '0.3';
             }
         });
@@ -268,9 +285,9 @@ export const UI = {
         // שורת חנות ולינק
         if (item.store || item.product_url) {
             detailsHtml += `
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); padding-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(173, 171, 158, 0.15); padding-bottom: 12px;">
                 <span style="color: var(--text-secondary); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;">Vendor / Store</span>
-                <a href="${item.product_url || '#'}" target="_blank" style="color: var(--sage-green); text-decoration: none; font-weight: 600; font-size: 14px;">
+                <a href="${item.product_url || '#'}" target="_blank" style="color: var(--actions); text-decoration: none; font-weight: 600; font-size: 14px;">
                     ${item.store || 'View Store'} ↗
                 </a>
             </div>`;
@@ -279,7 +296,7 @@ export const UI = {
         // שורת מידות
         if (item.dim_l || item.dim_w || item.dim_h) {
             detailsHtml += `
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); padding-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(173, 171, 158, 0.15); padding-bottom: 12px;">
                 <span style="color: var(--text-secondary); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;">Dimensions (L × W × H)</span>
                 <span style="color: var(--text-primary); font-family: monospace; font-size: 14px;">
                     ${item.dim_l || '-'} × ${item.dim_w || '-'} × ${item.dim_h || '-'} cm
@@ -295,19 +312,19 @@ export const UI = {
 
             if (alternatives.length > 0) {
                 detailsHtml += `
-                <div style="margin-top: 24px; border-top: 1px solid var(--border-light); padding-top: 16px;">
+                <div style="margin-top: 24px; border-top: 1px solid rgba(173, 171, 158, 0.15); padding-top: 16px;">
                     <span style="color: var(--text-secondary); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;">Curated Alternatives (${alternatives.length})</span>
                     <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 12px;">`;
                 
                 alternatives.forEach(alt => {
                     const altPrice = alt.actual_price ? alt.actual_price : alt.price;
                     detailsHtml += `
-                        <div class="alt-item-row" data-alt-id="${alt.id}" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-light); border-radius: 8px; padding: 12px; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; cursor: pointer;" onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='rgba(255,255,255,0.02)'">
+                        <div class="alt-item-row" data-alt-id="${alt.id}" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(173, 171, 158, 0.15); border-radius: 8px; padding: 12px; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; cursor: pointer;" onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='rgba(255,255,255,0.02)'">
                             <div>
                                 <div style="font-size: 13px; font-weight: 600; color: var(--text-primary);">${alt.name || 'Alternative Option'}</div>
                                 <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">${alt.store || 'Unknown Store'}</div>
                             </div>
-                            <div style="color: var(--sage-green); font-weight: bold; font-size: 14px;">
+                            <div style="color: var(--actions); font-weight: bold; font-size: 14px;">
                                 ₪${new Intl.NumberFormat('en-US').format(altPrice || 0)}
                             </div>
                         </div>`;
@@ -321,13 +338,13 @@ export const UI = {
         const isPurchased = item.is_purchased === true || String(item.is_purchased).toLowerCase() === 'true';
         
         if (!isPurchased) {
-            detailsHtml += `<button id="btn-mark-purchased" style="width: 100%; margin-top: 16px; margin-bottom: 8px; background: var(--sage-green); color: var(--onyx); border: none; padding: 12px; border-radius: 8px; font-weight: 700; font-family: var(--font-main); cursor: pointer; transition: 0.2s;">✓ Mark as Purchased</button>`;
+            detailsHtml += `<button id="btn-mark-purchased" style="width: 100%; margin-top: 16px; margin-bottom: 8px; background: var(--actions); color: var(--onyx); border: none; padding: 12px; border-radius: 8px; font-weight: 700; font-family: var(--font-main); cursor: pointer; transition: 0.2s;">✓ Mark as Purchased</button>`;
         } else {
-            detailsHtml += `<div style="width: 100%; margin-top: 16px; margin-bottom: 8px; background: rgba(169, 191, 168, 0.1); color: var(--sage-green); border: 1px solid var(--sage-green); padding: 12px; border-radius: 8px; font-weight: 700; font-family: var(--font-main); text-align: center; box-sizing: border-box;">✓ Purchased</div>`;
+            detailsHtml += `<div style="width: 100%; margin-top: 16px; margin-bottom: 8px; background: rgba(169, 191, 168, 0.1); color: var(--actions); border: 1px solid var(--actions); padding: 12px; border-radius: 8px; font-weight: 700; font-family: var(--font-main); text-align: center; box-sizing: border-box;">✓ Purchased</div>`;
             modalImage.style.opacity = '0.5';
         }
 
-        detailsHtml += `<button id="btn-add-alt-inline" style="width: 100%; margin-top: 8px; background: transparent; border: 1px dashed var(--sage-green); color: var(--sage-green); padding: 10px; border-radius: 8px; cursor: pointer;">+ Add Alternative</button>`;
+        detailsHtml += `<button id="btn-add-alt-inline" style="width: 100%; margin-top: 8px; background: transparent; border: 1px dashed var(--actions); color: var(--actions); padding: 10px; border-radius: 8px; cursor: pointer;">+ Add Alternative</button>`;
         detailsHtml += `<button id="btn-edit-item" class="swap-button" style="margin-top: 8px;">✎ Edit Details</button>`;
         detailsHtml += `</div>`;
         
@@ -346,7 +363,7 @@ export const UI = {
                     const scenarioHtml = `
                         <div style="margin-top: 12px; display: flex; flex-direction: column;">
                             <label style="font-size: 12px; color: var(--text-light); margin-bottom: 4px;">Scenario / Tier</label>
-                            <select id="review-scenario" style="width: 100%; background: transparent; color: white; border: 1px solid var(--border-light); padding: 8px; border-radius: 4px;">
+                            <select id="review-scenario" style="width: 100%; background: transparent; color: white; border: 1px solid rgba(173, 171, 158, 0.15); padding: 8px; border-radius: 4px;">
                                 <option value="Balanced" style="color: black;">Balanced</option>
                                 <option value="Premium" style="color: black;">Premium</option>
                                 <option value="Pragmatic" style="color: black;">Pragmatic</option>

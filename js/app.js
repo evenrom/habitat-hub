@@ -157,10 +157,10 @@ async function init() {
             // העלאת תמונה רגילה
             if(dropzone && fileInput) {
                 dropzone.addEventListener('click', () => fileInput.click());
-                dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.style.borderColor = 'var(--sage-green)'; });
-                dropzone.addEventListener('dragleave', () => dropzone.style.borderColor = 'var(--border-light)');
+                dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.style.borderColor = 'var(--actions)'; });
+                dropzone.addEventListener('dragleave', () => dropzone.style.borderColor = 'rgba(173, 171, 158, 0.15)');
                 dropzone.addEventListener('drop', (e) => {
-                    e.preventDefault(); dropzone.style.borderColor = 'var(--border-light)';
+                    e.preventDefault(); dropzone.style.borderColor = 'rgba(173, 171, 158, 0.15)';
                     if (e.dataTransfer.files && e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
                 });
                 fileInput.addEventListener('change', (e) => {
@@ -204,7 +204,7 @@ async function init() {
                             const scenarioHtml = `
                                 <div style="margin-top: 12px; display: flex; flex-direction: column;">
                                     <label style="font-size: 12px; color: var(--text-light); margin-bottom: 4px;">Scenario / Tier</label>
-                                    <select id="review-scenario" style="width: 100%; background: transparent; color: white; border: 1px solid var(--border-light); padding: 8px; border-radius: 4px;">
+                                    <select id="review-scenario" style="width: 100%; background: transparent; color: white; border: 1px solid rgba(173, 171, 158, 0.15); padding: 8px; border-radius: 4px;">
                                         <option value="Balanced" style="color: black;">Balanced</option>
                                         <option value="Premium" style="color: black;">Premium</option>
                                         <option value="Pragmatic" style="color: black;">Pragmatic</option>
