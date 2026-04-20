@@ -21,7 +21,7 @@ async function init() {
             document.getElementById('btn-view-stores').classList.remove('active');
             UI.renderCarousel(Store.state.items);
         });
-
+        
         // Wire View Toggles
         const btnViewRooms = document.getElementById('btn-view-rooms');
         const btnViewStores = document.getElementById('btn-view-stores');
@@ -48,8 +48,7 @@ async function init() {
             isLoading: false
         });
 
-        // Ensure Render Nodes initialized directly after SVG and data loads
-        UI.initRenderNodes(Store.state.renders);
+        // (Deprecated) UI.initRenderNodes(Store.state.renders); // Moved securely to UI.initMapEvents
 
         // Populate Store Filter
         const storeFilter = document.getElementById('store-filter');
@@ -297,7 +296,7 @@ async function init() {
                         pendingItemData.dim_l = document.getElementById('review-l').value;
                         pendingItemData.dim_w = document.getElementById('review-w').value;
                         pendingItemData.dim_h = document.getElementById('review-h').value;
-
+                        
                         const scenarioEl = document.getElementById('review-scenario');
                         pendingItemData.scenario = scenarioEl ? scenarioEl.value : 'Balanced';
 
@@ -329,8 +328,8 @@ async function init() {
 
                         if (pendingItemData.id) {
                             await fetchAPI('updateItem', { item: pendingItemData });
-                            Store.setState({
-                                items: Store.state.items.map(i => i.id === pendingItemData.id ? pendingItemData : i)
+                            Store.setState({ 
+                                items: Store.state.items.map(i => i.id === pendingItemData.id ? pendingItemData : i) 
                             });
                         } else {
                             const saveRes = await fetchAPI('saveItem', { item: pendingItemData });
