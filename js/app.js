@@ -203,7 +203,7 @@ async function init() {
                             const scenarioHtml = `
                                 <div style="margin-top: 12px; display: flex; flex-direction: column;">
                                     <label style="font-size: 12px; color: var(--text-light); margin-bottom: 4px;">Scenario / Tier</label>
-                                    <select id="review-scenario" style="width: 100%; background: transparent; color: white; border: 1px solid rgba(173, 171, 158, 0.15); padding: 8px; border-radius: 4px;">
+                                    <select id="review-scenario" style="width: 100%; background: transparent; color: white; border: 1px solid rgba(173, 171, 158, 0.15); padding: 8px; border-radius: 4px; margin-top: 8px;">
                                         <option value="Balanced" style="color: black;">Balanced</option>
                                         <option value="Premium" style="color: black;">Premium</option>
                                         <option value="Pragmatic" style="color: black;">Pragmatic</option>
