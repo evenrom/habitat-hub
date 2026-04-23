@@ -159,7 +159,8 @@ function saveItem(payload) {
       id, item.room || '', item.type || 'Main', item.parent_id || '', item.name || '',
       item.price || 0, item.dim_l || '', item.dim_w || '', item.dim_h || '',
       item.image_id || '', item.product_url || '', item.store || '', timestamp,
-      item.is_purchased || false, item.actual_price || item.price || 0
+      item.is_purchased || false, item.actual_price || item.price || 0,
+      item.is_nice_to_have || false
     ];
     
     sheet.appendRow(newRow);
