@@ -31,36 +31,56 @@ export const Store = {
         return this.state.items.filter(item => item.room === roomId);
     },
 
-    getBudgetStats() {
-        const stats = {
-            Premium: { total: 0, spent: 0, remaining: 0 },
-            Balanced: { total: 0, spent: 0, remaining: 0 },
-            Pragmatic: { total: 0, spent: 0, remaining: 0 }
+    getBudgetStats: function() {
+        const items = this.state.items || [];
+        
+        let globalStats = {
+            coreTotal: 0,
+            niceToHaveTotal: 0,
+            grandTotal: 0,
+            spent: 0
         };
 
-        this.state.items.forEach(item => {
-            let scenario = item.scenario;
-            if (!scenario || !['Premium', 'Balanced', 'Pragmatic'].includes(scenario)) {
-                scenario = 'Balanced';
+        let roomStats = {};
+
+        items.forEach(item => {
+            // 1. Strictly exclude Alternatives from math
+            if (String(item.type).toLowerCase() === 'alternative') return;
+
+            const price = Number(item.price) || 0;
+            const actualPrice = Number(item.actual_price) || price;
+            const isPurchased = String(item.is_purchased).toLowerCase() === 'true';
+            const isNiceToHave = String(item.is_nice_to_have).toLowerCase() === 'true';
+            const room = item.room || 'Unassigned';
+
+            // Initialize room if it doesn't exist
+            if (!roomStats[room]) {
+                roomStats[room] = { coreTotal: 0, niceToHaveTotal: 0, roomTotal: 0, spent: 0 };
             }
 
-            const isPurchased = item.is_purchased === true || String(item.is_purchased).toLowerCase() === 'true';
-            const itemPrice = Number(item.price) || 0;
-
-            let itemActualPrice = Number(item.actual_price);
-            if (!itemActualPrice) {
-                itemActualPrice = itemPrice;
-            }
-
-            stats[scenario].total += itemPrice;
-
+            // Calculate Spent
             if (isPurchased) {
-                stats[scenario].spent += itemActualPrice;
+                globalStats.spent += actualPrice;
+                roomStats[room].spent += actualPrice;
             }
 
-            stats[scenario].remaining = stats[scenario].total - stats[scenario].spent;
+            // Calculate Buckets
+            if (isNiceToHave) {
+                globalStats.niceToHaveTotal += price;
+                roomStats[room].niceToHaveTotal += price;
+            } else {
+                globalStats.coreTotal += price;
+                roomStats[room].coreTotal += price;
+            }
+
+            // Calculate Totals
+            globalStats.grandTotal += price;
+            roomStats[room].roomTotal += price;
         });
 
-        return stats;
+        return {
+            global: globalStats,
+            rooms: roomStats
+        };
     }
 };
