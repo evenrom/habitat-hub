@@ -2,445 +2,240 @@
 const SPREADSHEET_ID = '17tPe9sjSa3RTaGRhLpTn7Fx0Fw_OCPRx1wIySSv90dw';
 const FOLDER_ID = '15TwDZ0rzZxZvrlOo2mC03imHbbxTCIeR';
 const PASSCODE = 'SA8RG';
-const GEMINI_API_KEY = 'YOUR_GEMINI_API_KEY_HERE';
+const GEMINI_API_KEY = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
 
 // ------------------------------------------------------------------------------------------------
 // Core API
 // ------------------------------------------------------------------------------------------------
 
-/**
- * Handle GET requests.
- * Returns a simple HTML placeholder.
- */
 function doGet(e) {
-  return HtmlService.createHtmlOutput('<h1>Habitat Hub API Active</h1>');
+  return HtmlService.createHtmlOutput('<h1>Habitat Hub API v2.0 Active</h1>');
 }
 
-/**
- * Handle POST requests.
- * The main API router.
- */
 function doPost(e) {
   try {
     const payload = JSON.parse(e.postData.contents);
+    if (payload.passcode !== PASSCODE) return createJsonResponse({ error: 'Unauthorized' }, 401);
 
-    // SECURITY GATE: Verify Passcode
-    if (payload.passcode !== PASSCODE) {
-      return createJsonResponse({ error: 'Unauthorized: Invalid Passcode' }, 401);
-    }
-
-    // Route to specific functions based on action
     switch (payload.action) {
-      case 'getInitialData':
-        return getInitialData();
-      case 'analyzeAndUpload':
-        return analyzeAndUpload(payload);
-      case 'uploadFloorPlan':
-        return uploadFloorPlan(payload);
-      case 'saveItem':
-        return saveItem(payload);
-      case 'updateItem':
-        return updateItem(payload);
-      case 'deleteItem':
-        return deleteItem(payload);
-      default:
-        return createJsonResponse({ error: 'Unknown Action' }, 400);
+      case 'getInitialData': return getInitialData();
+      case 'analyzeAndUpload': return analyzeAndUpload(payload);
+      case 'uploadImage': return uploadImage(payload);
+      case 'saveItem': return saveItem(payload);
+      case 'updateItem': return updateItem(payload);
+      case 'deleteItem': return deleteItem(payload);
+      default: return createJsonResponse({ error: 'Unknown Action' }, 400);
     }
   } catch (error) {
     return createJsonResponse({ error: error.toString() }, 500);
   }
 }
 
-// ------------------------------------------------------------------------------------------------
-// Helper Functions
-// ------------------------------------------------------------------------------------------------
-
-function createJsonResponse(data, statusCode = 200) { // statusCode is mainly conceptual in GAS for client handling
-  return ContentService.createTextOutput(JSON.stringify(data))
-    .setMimeType(ContentService.MimeType.JSON);
+function createJsonResponse(data, statusCode = 200) {
+  return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
 }
 
 // ------------------------------------------------------------------------------------------------
 // Action Handlers
 // ------------------------------------------------------------------------------------------------
-
-/**
- * Reads the 'Config' tab (Row 2 under 'Value' for Rooms list) and the 'Items' tab (all data rows).
- */
 function getInitialData() {
   try {
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-
-    // 1. Get Rooms and Floor Plan from Config
+    
+    // 1. Parse Config
     const configSheet = ss.getSheetByName('Config');
-    let rooms = [];
-    let floorPlanImageID = null;
-
+    let config = {};
     if (configSheet) {
-      const data = configSheet.getDataRange().getValues();
-      // Loop through all data to find dynamic keys
-      for (let i = 0; i < data.length; i++) {
-        const key = data[i][0];
-        const value = data[i][1];
-
-        if (key === 'Room_List' || key === 'Rooms') {
-          // Parse rooms array
-          if (value) {
-            try {
-              rooms = JSON.parse(value);
-            } catch (e) {
-              rooms = value.split(',').map(r => r.trim());
-            }
-          }
+      const configData = configSheet.getDataRange().getValues();
+      for (let i = 1; i < configData.length; i++) {
+        const key = configData[i][0];
+        const value = configData[i][1];
+        if (!key) continue;
+        if (key === 'Room_List') {
+          try { config[key] = JSON.parse(value); } 
+          catch (e) { config[key] = value.split(',').map(r => r.trim()); }
+        } else {
+          config[key] = value;
         }
-
-        if (key === 'FloorPlan_ImageID') {
-          floorPlanImageID = value;
-        }
-      }
-
-      // Fallback: If rooms is still empty, check B2 explicitly if not caught above
-      if (rooms.length === 0 && data.length > 1 && data[1][1]) {
-         const legacyValue = data[1][1];
-         try {
-            rooms = JSON.parse(legacyValue);
-         } catch (e) {
-            // Only split if looks like a string list
-            if (typeof legacyValue === 'string') {
-                rooms = legacyValue.split(',').map(r => r.trim());
-            }
-         }
       }
     }
 
-    // 2. Get Items
+    // 2. Parse Items
     const itemsSheet = ss.getSheetByName('Items');
     let items = [];
     if (itemsSheet) {
       const data = itemsSheet.getDataRange().getValues();
-      const headers = data[0]; // Row 1 is headers
-      // Map rows to objects
+      const headers = data[0];
       for (let i = 1; i < data.length; i++) {
-        const row = data[i];
         let item = {};
         for (let j = 0; j < headers.length; j++) {
-          item[headers[j]] = row[j];
+          item[headers[j]] = data[i][j];
         }
         items.push(item);
       }
     }
 
-    return createJsonResponse({ rooms: rooms, items: items, floorPlanImageID: floorPlanImageID });
+    // 3. Parse Renders (THIS WAS MISSING)
+    const rendersSheet = ss.getSheetByName('Renders');
+    let renders = [];
+    if (rendersSheet) {
+      const rData = rendersSheet.getDataRange().getValues();
+      const rHeaders = rData[0];
+      for (let i = 1; i < rData.length; i++) {
+        let renderObj = {};
+        for (let j = 0; j < rHeaders.length; j++) {
+          renderObj[rHeaders[j]] = rData[i][j];
+        }
+        // Only push valid rows
+        if (renderObj.node_id) {
+            renders.push(renderObj);
+        }
+      }
+    }
 
+    // Return all three objects
+    return createJsonResponse({ config: config, items: items, renders: renders });
   } catch (error) {
-    return createJsonResponse({ error: 'Failed to fetch initial data: ' + error.toString() }, 500);
+    return createJsonResponse({ error: 'Data fetch failed: ' + error.toString() }, 500);
   }
 }
 
-/**
- * Receive base64Image.
- * Convert Base64 to Blob and save to Google Drive.
- * Call Gemini API to extract details.
- * Return extracted data + imageID.
- */
 function analyzeAndUpload(payload) {
   try {
     const base64Image = payload.base64Image;
-    if (!base64Image) {
-      return createJsonResponse({ error: 'No image data provided' }, 400);
+    let imageID = '';
+
+    // Handle Optional Image Upload
+    if (base64Image) {
+      const validBase64 = base64Image.split(',').pop();
+      const blob = Utilities.newBlob(Utilities.base64Decode(validBase64), 'image/png', 'asset_' + new Date().getTime());
+      const file = DriveApp.getFolderById(FOLDER_ID).createFile(blob);
+      imageID = file.getId();
+      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
     }
 
-    // 1. Save Image to Drive (Always use the cropped image)
-    // Remove header if present (e.g., "data:image/png;base64,")
-    const validBase64 = base64Image.split(',').pop();
-    const blob = Utilities.newBlob(Utilities.base64Decode(validBase64), 'image/png', 'furniture_upload_' + new Date().getTime()); // Defaulting to png, can be dynamic
-    const folder = DriveApp.getFolderById(FOLDER_ID);
-    const file = folder.createFile(blob);
-    const imageID = file.getId();
-
-    // Enable file to be viewable by anyone with the link (or at least the user)
-    // In a real app, strict permissions are better. For this:
-    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-
-
-    // 2. Call Gemini API
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
-
-    const promptText = "Analyze this furniture image. Extract: Name, Price (numbers only), Dimensions (Length, Width, Height). Return STRICTLY a valid JSON object with keys: name, price, dim_l, dim_w, dim_h, image_analysis. If a dimension is unknown, use 'Unknown'.";
-
-    // Use fullBase64Image if provided (for better context), otherwise fallback to base64Image
-    const imageForAnalysis = payload.fullBase64Image || base64Image;
-    const validAnalysisBase64 = imageForAnalysis.split(',').pop();
-
-    const requestBody = {
-      contents: [
-        {
-          parts: [
-            { text: promptText },
-            {
-              inline_data: {
-                mime_type: "image/png", // Assuming png from the blob creation above
-                data: validAnalysisBase64
-              }
-            }
-          ]
-        }
-      ]
-    };
-
-    const options = {
-      method: 'POST',
-      contentType: 'application/json',
-      payload: JSON.stringify(requestBody),
-      muteHttpExceptions: true
-    };
-
-    const response = UrlFetchApp.fetch(geminiUrl, options);
-    const responseCode = response.getResponseCode();
-    const responseText = response.getContentText();
-
-    if (responseCode !== 200) {
-      throw new Error(`Gemini API Error (${responseCode}): ${responseText}`);
-    }
-
-    const jsonResponse = JSON.parse(responseText);
-
-    // Parse Gemini's candidate text which should be JSON
+    // AI Analysis (If API Key is present)
     let extractedData = {};
-    if (jsonResponse.candidates && jsonResponse.candidates[0] && jsonResponse.candidates[0].content && jsonResponse.candidates[0].content.parts) {
-      const textPart = jsonResponse.candidates[0].content.parts[0].text;
-      // Clean up markdown code blocks if Gemini returns them
-      const jsonString = textPart.replace(/```json/g, '').replace(/```/g, '').trim();
-      extractedData = JSON.parse(jsonString);
+    if (GEMINI_API_KEY && (base64Image || payload.productURL)) {
+      const urlContext = payload.productURL ? `Product URL: ${payload.productURL}. ` : '';
+      const promptText = `${urlContext}Extract furniture details. Return STRICTLY a valid JSON object with keys: name, price (number), dim_l, dim_w, dim_h, store (clean brand name). Use 'Unknown' or 0 if missing.`;
+      
+      const contents = [{ parts: [{ text: promptText }] }];
+      if (base64Image) {
+        contents[0].parts.push({ inline_data: { mime_type: "image/png", data: base64Image.split(',').pop() } });
+      }
+
+      const options = {
+        method: 'POST',
+        contentType: 'application/json',
+        payload: JSON.stringify({ contents: contents }),
+        muteHttpExceptions: true
+      };
+      
+      const response = UrlFetchApp.fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, options);
+      if (response.getResponseCode() === 200) {
+        const jsonResponse = JSON.parse(response.getContentText());
+        const textPart = jsonResponse.candidates[0].content.parts[0].text;
+        extractedData = JSON.parse(textPart.replace(/```json/g, '').replace(/```/g, '').trim());
+      }
     }
 
-    // Return combined result
-    return createJsonResponse({
-      success: true,
-      imageID: imageID,
-      extractedData: extractedData
-    });
-
+    return createJsonResponse({ success: true, image_id: imageID, extractedData: extractedData });
   } catch (error) {
     return createJsonResponse({ error: 'Analysis failed: ' + error.toString() }, 500);
   }
 }
 
-/**
- * Upload Floor Plan Image to Drive and Update Config Sheet.
- */
-function uploadFloorPlan(payload) {
-  try {
-    const base64Image = payload.base64Image;
-    if (!base64Image) {
-      return createJsonResponse({ error: 'No image data provided' }, 400);
-    }
-
-    // 1. Save Image to Drive
-    const validBase64 = base64Image.split(',').pop();
-    const blob = Utilities.newBlob(Utilities.base64Decode(validBase64), 'image/png', 'floorplan_' + new Date().getTime());
-    const folder = DriveApp.getFolderById(FOLDER_ID);
-    const file = folder.createFile(blob);
-    const imageID = file.getId();
-
-    // Set permissions
-    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-
-    // 2. Update Config Sheet
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-    let configSheet = ss.getSheetByName('Config');
-    if (!configSheet) {
-      configSheet = ss.insertSheet('Config');
-      configSheet.appendRow(['Key', 'Value']); // Header
-    }
-
-    const data = configSheet.getDataRange().getValues();
-    let found = false;
-
-    // Search for 'FloorPlan_ImageID' key in Column A (index 0)
-    for (let i = 0; i < data.length; i++) {
-      if (data[i][0] === 'FloorPlan_ImageID') {
-        // Update Column B (index 1), Row is i+1
-        configSheet.getRange(i + 1, 2).setValue(imageID);
-        found = true;
-        break;
-      }
-    }
-
-    // If not found, append new row
-    if (!found) {
-      configSheet.appendRow(['FloorPlan_ImageID', imageID]);
-    }
-
-    return createJsonResponse({ success: true, imageID: imageID });
-
-  } catch (error) {
-    return createJsonResponse({ error: 'Floor plan upload failed: ' + error.toString() }, 500);
-  }
-}
-
-/**
- * Append a new row to the 'Items' sheet.
- */
 function saveItem(payload) {
   try {
     const item = payload.item;
-    if (!item) {
-      return createJsonResponse({ error: 'No item data provided' }, 400);
-    }
+    if (!item) return createJsonResponse({ error: 'No data' }, 400);
 
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-    const sheet = ss.getSheetByName('Items');
-    if (!sheet) {
-      return createJsonResponse({ error: 'Items sheet not found' }, 500);
-    }
-
-    // Generate ID if not provided (though prompt says generate simple UUID/Timestamp string)
-    // The prompt says: "ID (generate a simple UUID/Timestamp string)" - assuming backend should do it if not present,
-    // or blindly generate one. Let's generate one.
+    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName('Items');
     const id = Utilities.getUuid();
     const timestamp = new Date();
 
-    // EXPECTED COLUMNS: ID, Room, Type, ParentID, Name, Price, Dim_L, Dim_W, Dim_H, ImageID, ProductURL, Timestamp
     const newRow = [
-      id,
-      item.room || '',
-      item.type || 'Main',
-      item.parentID || '',
-      item.name || '',
-      item.price || 0,
-      item.dim_l || '',
-      item.dim_w || '',
-      item.dim_h || '',
-      item.imageID || '',
-      item.productURL || '',
-      timestamp
+      id, item.room || '', item.type || 'Main', item.parent_id || '', item.name || '',
+      item.price || 0, item.dim_l || '', item.dim_w || '', item.dim_h || '',
+      item.image_id || '', item.product_url || '', item.store || '', timestamp,
+      item.is_purchased || false, item.actual_price || item.price || 0
     ];
-
+    
     sheet.appendRow(newRow);
-
-    return createJsonResponse({ success: true, id: id, message: 'Item saved successfully' });
-
+    return createJsonResponse({ success: true, id: id });
   } catch (error) {
-    return createJsonResponse({ error: 'Save failed: ' + error.toString() }, 500);
+    return createJsonResponse({ error: 'Save failed' }, 500);
   }
 }
 
-/**
- * Find a row by ID in the 'Items' sheet and update its values.
- */
 function updateItem(payload) {
   try {
     const item = payload.item;
-    if (!item || !item.id) {
-      return createJsonResponse({ error: 'No item ID provided for update' }, 400);
-    }
-
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-    const sheet = ss.getSheetByName('Items');
+    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName('Items');
     const data = sheet.getDataRange().getValues();
+    
+    let rowIndex = data.findIndex((row, i) => i > 0 && row[0] === item.id);
+    if (rowIndex === -1) return createJsonResponse({ error: 'Not found' }, 404);
+    rowIndex += 1; // Adjust for 1-based indexing
 
-    // Find row index (0-based in array, +1 for sheet row)
-    // Assuming ID is in column 1 (index 0)
-    let rowIndex = -1;
-    for (let i = 1; i < data.length; i++) {
-      if (data[i][0] == item.id) {
-        rowIndex = i + 1; // Sheet row index (1-based)
-        break;
-      }
-    }
-
-    if (rowIndex === -1) {
-      return createJsonResponse({ error: 'Item not found' }, 404);
-    }
-
-    // Columns: ID, Room, Type, ParentID, Name, Price, Dim_L, Dim_W, Dim_H, ImageID, ProductURL, Timestamp
-    // We update specific fields provided in the payload, or overwrite all?
-    // Prompt says: "Find a row by ID in the 'Items' sheet and update its values. (Crucial for handling edits and the "Set as Main" swapping logic for alternatives)"
-    // It's safer to overwrite the row with provided data, but we must preserve the ID and maybe Timestamp if not provided.
-    // Let's assume payload.item contains the FULL desired state of the row, or at least the fields to update.
-    // Ideally, for "Set as Main", the frontend sends the updated objects.
-
-    // Let's retrieve current row to merge if needed, but for simplicity, we'll write what's given for the known columns.
-    // Assuming the frontend sends the complete object or we only update specific columns.
-    // Since we need to support "Set as Main", which changes Type and ParentID, we should update those.
-
-    // Let's implement a merge strategy:
+    const headers = data[0];
     const currentRow = data[rowIndex - 1];
-
-    // Map of Column Index to Key
-    const colMap = {
-      0: 'id',
-      1: 'room',
-      2: 'type',
-      3: 'parentID',
-      4: 'name',
-      5: 'price',
-      6: 'dim_l',
-      7: 'dim_w',
-      8: 'dim_h',
-      9: 'imageID',
-      10: 'productURL',
-      11: 'timestamp'
-    };
-
-    // Construct the updated row array
     const updatedRow = [...currentRow];
 
-    // Update fields if present in payload
-    if (item.room !== undefined) updatedRow[1] = item.room;
-    if (item.type !== undefined) updatedRow[2] = item.type;
-    if (item.parentID !== undefined) updatedRow[3] = item.parentID;
-    if (item.name !== undefined) updatedRow[4] = item.name;
-    if (item.price !== undefined) updatedRow[5] = item.price;
-    if (item.dim_l !== undefined) updatedRow[6] = item.dim_l;
-    if (item.dim_w !== undefined) updatedRow[7] = item.dim_w;
-    if (item.dim_h !== undefined) updatedRow[8] = item.dim_h;
-    if (item.imageID !== undefined) updatedRow[9] = item.imageID;
-    if (item.productURL !== undefined) updatedRow[10] = item.productURL;
-    // We usually don't update timestamp on edit, or we do? Let's leave it unless specified.
+    headers.forEach((header, index) => {
+      if (item[header] !== undefined) updatedRow[index] = item[header];
+    });
 
-    // Write back to sheet
     sheet.getRange(rowIndex, 1, 1, updatedRow.length).setValues([updatedRow]);
-
-    return createJsonResponse({ success: true, message: 'Item updated successfully' });
-
+    return createJsonResponse({ success: true });
   } catch (error) {
-    return createJsonResponse({ error: 'Update failed: ' + error.toString() }, 500);
+    return createJsonResponse({ error: 'Update failed' }, 500);
   }
 }
 
-/**
- * Find a row by ID and delete it.
- */
 function deleteItem(payload) {
   try {
-    const id = payload.id;
-    if (!id) {
-      return createJsonResponse({ error: 'No item ID provided for delete' }, 400);
-    }
-
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-    const sheet = ss.getSheetByName('Items');
+    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName('Items');
     const data = sheet.getDataRange().getValues();
-
-    let rowIndex = -1;
-    for (let i = 1; i < data.length; i++) {
-      if (data[i][0] == id) {
-        rowIndex = i + 1;
-        break;
-      }
-    }
-
-    if (rowIndex === -1) {
-      return createJsonResponse({ error: 'Item not found' }, 404);
-    }
-
-    sheet.deleteRow(rowIndex);
-
-    return createJsonResponse({ success: true, message: 'Item deleted successfully' });
-
+    const rowIndex = data.findIndex((row, i) => i > 0 && row[0] === payload.id);
+    
+    if (rowIndex === -1) return createJsonResponse({ error: 'Not found' }, 404);
+    
+    sheet.deleteRow(rowIndex + 1);
+    return createJsonResponse({ success: true });
   } catch (error) {
-    return createJsonResponse({ error: 'Delete failed: ' + error.toString() }, 500);
+    return createJsonResponse({ error: 'Delete failed' }, 500);
+  }
+}
+
+function uploadImage(payload) {
+  try {
+    const validBase64 = payload.base64Image.split(',').pop();
+    const blob = Utilities.newBlob(Utilities.base64Decode(validBase64), 'image/png', 'cropped_' + new Date().getTime());
+    const file = DriveApp.getFolderById(FOLDER_ID).createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    return createJsonResponse({ success: true, image_id: file.getId() });
+  } catch (error) {
+    return createJsonResponse({ error: 'Upload failed: ' + error.toString() }, 500);
+  }
+}
+
+function testRendersFetch() {
+  Logger.log("Starting Test...");
+  try {
+    const response = getInitialData();
+    const data = JSON.parse(response.getContent());
+    
+    if (data.renders && data.renders.length > 0) {
+      Logger.log("✅ SUCCESS: Found " + data.renders.length + " render nodes.");
+      Logger.log("Sample Data: " + JSON.stringify(data.renders[0]));
+      Logger.log("CONCLUSION: The code works perfectly. You MUST deploy a New Version for the app to see this.");
+    } else {
+      Logger.log("❌ ERROR: The renders array is empty or missing.");
+      Logger.log("CONCLUSION: The code is failing to read the Renders sheet. Check sheet name and headers.");
+    }
+  } catch (e) {
+    Logger.log("❌ FATAL ERROR: " + e.toString());
   }
 }
