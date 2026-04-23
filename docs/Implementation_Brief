@@ -1,29 +1,25 @@
-# Implementation Brief: Habitat (Amy's Workflow)
+# Implementation_Brief.md
 
 ## 1. Important Framing
-This project is optimized for a **web-based development flow**. All frontend changes are managed directly within the GitHub repository, and backend logic resides in Google Apps Script.
+This project is optimized for Amy's workflow. All frontend changes are managed directly within the GitHub repository (Vanilla HTML5, CSS3, ES6 JS), and backend logic resides in Google Apps Script acting as a headless REST API.
 
-## 2. Selected Stack
-* **TPM Assigned:** Amy (Jules/GAS Specialist).
-* **Frontend:** HTML5, CSS3, Vanilla ES6. Managed directly in GitHub.
-* **Backend:** Apps Script (REST API).
-* **Database:** Google Sheets.
-
-## 3. Tech Constraints & Performance
-* **Intersection Observer:** Essential for lazy-loading Drive images (Render Nodes and Item Cards) to avoid 403 Rate Limit errors.
+## 2. Tech Constraints & Performance
+* **Intersection Observer:** Essential for lazy-loading Drive images (Render Nodes and Item Cards).
 * **Drive Integration:** All renders and images are fetched via Google Drive ID.
 
-## 4. Core Logic & Schema
-### Investment Engine
-* **Premium Total:** Sum of prices for items marked 'Premium'.
-* **Balanced Total:** Sum of prices for items marked 'Balanced'.
-* **Pragmatic Total:** Sum of prices for items marked 'Pragmatic'.
-* **Spent:** Sum of `actual_price` where `is_purchased` is true.
+## 3. Core Logic & State Management
+### Investment Engine (in `store.js`)
+* `Core Total`: Sum of prices for items where `type === 'Main'` AND `is_nice_to_have === false`.
+* `Nice-to-have Total`: Sum of prices for items where `type === 'Main'` AND `is_nice_to_have === true`.
+* `Total`: Core Total + Nice-to-have Total.
+* `Alternatives`: Ignored completely in math.
 
-### Validation
-* `ui.js` must validate that an item and its alternatives do not duplicate a `scenario` value.
+### Validation & Swaps (in `ui.js`)
+* **Edit Modal:** If `parent_id` is not empty (item is Alternative), disable the `is_nice_to_have` toggle UI.
+* **Swap Function:** When calling the `updateItem` API to promote an Alternative to Main, the payload MUST explicitly include `is_nice_to_have: false` to reset the state.
 
-## 5. Database Schema (Items Sheet)
+## 4. Database Schema (Google Sheets)
+**Sheet: 'Items'**
 1. `id` (UUID)
 2. `room` (Foyer/Kitchen/etc)
 3. `type` (Main/Alternative)
@@ -37,9 +33,9 @@ This project is optimized for a **web-based development flow**. All frontend cha
 11. `timestamp`
 12. `is_purchased` (Boolean)
 13. `actual_price`
-14. `scenario` (Premium/Balanced/Pragmatic)
+14. `is_nice_to_have` (Boolean - **NEW**)
 
-## 6. Renders Sheet
+**Sheet: 'Renders'** (NEW)
 1. `node_id` (Matches SVG circle ID)
 2. `drive_image_id`
 3. `room_context`
