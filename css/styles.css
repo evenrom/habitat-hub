@@ -226,7 +226,7 @@ h1, h2, h3, h4, h5, h6, .brand {
 
 .carousel-item p {
     margin: 0;
-    color: var(--actions);
+    color: #adab9e;
     font-weight: 700;
     font-size: 14px;
     font-family: var(--font-main);

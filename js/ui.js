@@ -189,6 +189,11 @@ export const UI = {
 
         // Remove filtering out from Store, logic is now grouped and filtering depends on viewMode
         let mainItems = items.filter(item => String(item.type).toLowerCase() !== 'alternative');
+        
+        // Task 4: Global Core Filter
+        if (Store.state.coreOnly) {
+            mainItems = mainItems.filter(item => String(item.is_nice_to_have).toLowerCase() !== 'true');
+        }
 
         if (!mainItems || mainItems.length === 0) {
             section.classList.add('hidden');
@@ -264,7 +269,7 @@ export const UI = {
                     <img data-src="${imgUrl}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="${item.name || 'Item'}">
                     <div class="details">
                         <h3 style="margin: 0; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.name || 'Unnamed Item'}</h3>
-                        <p style="margin: 4px 0; color: var(--actions); font-weight: bold;">₪${new Intl.NumberFormat('en-US').format(item.price || 0)}</p>
+                        <p style="margin: 4px 0; color: #adab9e; font-weight: bold;">₪${new Intl.NumberFormat('en-US').format(item.price || 0)}</p>
                     </div>
                 `;
 
@@ -376,21 +381,30 @@ export const UI = {
                 // Set the pending edit item globally for app.js to catch
                 window.pendingEditItem = { ...item };
 
-                // Make sure scenario UI exists
-                if (!document.getElementById('review-scenario')) {
-                    const scenarioHtml = `
-                        <div style="margin-top: 12px; display: flex; flex-direction: column;">
-                            <label style="font-size: 12px; color: var(--text-light); margin-bottom: 4px;">Scenario / Tier</label>
-                            <select id="review-scenario" style="width: 100%; background: transparent; color: white; border: 1px solid rgba(173, 171, 158, 0.15); padding: 8px; border-radius: 4px; margin-top: 8px;">
-                                <option value="Balanced" style="color: black;">Balanced</option>
-                                <option value="Premium" style="color: black;">Premium</option>
-                                <option value="Pragmatic" style="color: black;">Pragmatic</option>
-                            </select>
+                // Make sure Nice-to-have UI exists
+                if (!document.getElementById('review-nice-to-have')) {
+                    const niceHtml = `
+                        <div id="nice-to-have-container" style="margin-top: 16px; display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; border: 1px solid rgba(173, 171, 158, 0.15);">
+                            <input type="checkbox" id="review-nice-to-have" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--actions);">
+                            <label for="review-nice-to-have" style="font-size: 14px; color: var(--text-primary); cursor: pointer; user-select: none;">Nice-to-have</label>
                         </div>
                     `;
                     const reviewStore = document.getElementById('review-store');
                     if (reviewStore && reviewStore.parentNode) {
-                        reviewStore.parentNode.insertAdjacentHTML('afterend', scenarioHtml);
+                        reviewStore.parentNode.insertAdjacentHTML('afterend', niceHtml);
+                    }
+                }
+
+                // Handle visual state for Alternatives
+                const niceContainer = document.getElementById('nice-to-have-container');
+                const isAlternative = item.parent_id && String(item.type).toLowerCase() === 'alternative';
+                if (niceContainer) {
+                    if (isAlternative) {
+                        niceContainer.style.opacity = '0.5';
+                        niceContainer.style.pointerEvents = 'none';
+                    } else {
+                        niceContainer.style.opacity = '1';
+                        niceContainer.style.pointerEvents = 'auto';
                     }
                 }
 
@@ -401,8 +415,9 @@ export const UI = {
                 document.getElementById('review-l').value = item.dim_l || '';
                 document.getElementById('review-w').value = item.dim_w || '';
                 document.getElementById('review-h').value = item.dim_h || '';
-                const scenarioEl = document.getElementById('review-scenario');
-                if (scenarioEl) scenarioEl.value = item.scenario || 'Balanced';
+                
+                const niceEl = document.getElementById('review-nice-to-have');
+                if (niceEl) niceEl.checked = String(item.is_nice_to_have).toLowerCase() === 'true';
 
                 document.getElementById('review-img').src = imgUrl;
 
@@ -529,8 +544,8 @@ export const UI = {
             newSelectBtn.disabled = true;
 
             try {
-                // 1. Promote alt to Main
-                await fetchAPI('updateItem', { item: { id: altItem.id, type: 'Main', parent_id: '' } });
+                // 1. Promote alt to Main (and forcefully set is_nice_to_have to false)
+                await fetchAPI('updateItem', { item: { id: altItem.id, type: 'Main', parent_id: '', is_nice_to_have: false } });
 
                 // 2. Demote main to Alternative
                 await fetchAPI('updateItem', { item: { id: mainItem.id, type: 'Alternative', parent_id: altItem.id } });
@@ -538,6 +553,7 @@ export const UI = {
                 // Update local store state
                 altItem.type = 'Main';
                 altItem.parent_id = '';
+                altItem.is_nice_to_have = false;
 
                 mainItem.type = 'Alternative';
                 mainItem.parent_id = altItem.id;
@@ -591,33 +607,59 @@ export const UI = {
         if (!container) return;
 
         const budgetStats = Store.getBudgetStats();
-        let html = '<div style="display: flex; flex-direction: column; gap: 16px;">';
+        const global = budgetStats.global;
+        const rooms = budgetStats.rooms;
+        
+        let html = '<div style="display: flex; flex-direction: column; gap: 24px;">';
 
-        const scenarios = ['Premium', 'Balanced', 'Pragmatic'];
+        // --- Global Stats ---
+        const globalPercent = global.grandTotal > 0 ? Math.min((global.spent / global.grandTotal) * 100, 100) : 0;
+        
+        html += `
+        <div style="background: rgba(23, 19, 15, 0.8); border: 1px solid var(--actions); border-radius: 8px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                <strong style="font-size: 18px; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.1em; font-family: var(--font-headings);">Global Budget</strong>
+                <span style="font-size: 16px; color: var(--actions); font-weight: 700; font-family: var(--font-main);">Est: ₪${new Intl.NumberFormat('en-US').format(global.grandTotal)}</span>
+            </div>
+            <div style="width: 100%; background: rgba(0,0,0,0.5); height: 10px; border-radius: 5px; overflow: hidden; margin-bottom: 16px;">
+                <div style="width: ${globalPercent}%; height: 100%; background: var(--actions); transition: width 0.5s ease-out;"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 14px; font-family: var(--font-main); margin-bottom: 8px;">
+                <span style="color: var(--text-primary); font-weight: 600;">Spent: ₪${new Intl.NumberFormat('en-US').format(global.spent)}</span>
+                <span style="color: #adab9e;">Remaining: ₪${new Intl.NumberFormat('en-US').format(global.grandTotal - global.spent)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; font-family: var(--font-main); border-top: 1px solid rgba(173, 171, 158, 0.2); padding-top: 8px;">
+                <span style="color: #adab9e;">Core: ₪${new Intl.NumberFormat('en-US').format(global.coreTotal)}</span>
+                <span style="color: #adab9e;">Nice-to-have: ₪${new Intl.NumberFormat('en-US').format(global.niceToHaveTotal)}</span>
+            </div>
+        </div>
+        
+        <h3 style="font-family: var(--font-headings); font-size: 16px; color: var(--text-primary); margin: 0 0 -8px 0; border-bottom: 1px solid rgba(173, 171, 158, 0.2); padding-bottom: 8px;">Per-Room Breakdown</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px;">
+        `;
 
-        scenarios.forEach(scenario => {
-            const stats = budgetStats[scenario];
-            if (!stats) return;
-
-            const percent = stats.total > 0 ? Math.min((stats.spent / stats.total) * 100, 100) : 0;
+        // --- Room Breakdowns ---
+        for (const roomName in rooms) {
+            const r = rooms[roomName];
+            const roomPercent = r.roomTotal > 0 ? Math.min((r.spent / r.roomTotal) * 100, 100) : 0;
             
             html += `
-            <div style="background: rgba(23, 19, 15, 0.4); border: 1px solid rgba(173, 171, 158, 0.15); border-radius: 8px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-                    <strong style="font-size: 16px; color: var(--actions); text-transform: uppercase; letter-spacing: 0.1em; font-family: var(--font-headings);">${scenario} Scenario</strong>
-                    <span style="font-size: 14px; color: var(--text-light); font-weight: 600; font-family: var(--font-main);">Est: ₪${new Intl.NumberFormat('en-US').format(stats.total)}</span>
+            <div style="background: rgba(41, 36, 32, 0.6); border: 1px solid rgba(173, 171, 158, 0.15); border-radius: 8px; padding: 12px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <strong style="font-size: 14px; color: var(--text-primary); font-family: var(--font-headings);">${roomName}</strong>
+                    <span style="font-size: 13px; color: var(--actions); font-weight: 600;">₪${new Intl.NumberFormat('en-US').format(r.roomTotal)}</span>
                 </div>
-                <div style="width: 100%; background: rgba(0,0,0,0.5); height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 12px;">
-                    <div style="width: ${percent}%; height: 100%; background: var(--actions); transition: width 0.5s ease-out;"></div>
+                <div style="width: 100%; background: rgba(0,0,0,0.5); height: 6px; border-radius: 3px; overflow: hidden; margin-bottom: 8px;">
+                    <div style="width: ${roomPercent}%; height: 100%; background: var(--actions);"></div>
                 </div>
-                <div style="display: flex; justify-content: space-between; font-size: 14px; font-family: var(--font-main);">
-                    <span style="color: var(--actions); font-weight: 600;">Spent: ₪${new Intl.NumberFormat('en-US').format(stats.spent)}</span>
-                    <span style="color: var(--accents);">Remaining: ₪${new Intl.NumberFormat('en-US').format(stats.remaining)}</span>
+                <div style="display: flex; justify-content: space-between; font-size: 12px; font-family: var(--font-main);">
+                    <span style="color: #adab9e;">Core: ₪${new Intl.NumberFormat('en-US').format(r.coreTotal)}</span>
+                    <span style="color: #adab9e;">Nice: ₪${new Intl.NumberFormat('en-US').format(r.niceToHaveTotal)}</span>
                 </div>
             </div>`;
-        });
-        
-        html += '</div>';
+        }
+
+        html += '</div></div>';
         container.innerHTML = html;
     },
 };

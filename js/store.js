@@ -6,7 +6,8 @@ export const Store = {
         currentRoom: 'All',
         currentStore: 'All',
         viewMode: 'rooms',
-        isLoading: true
+        isLoading: true,
+        coreOnly: false
     },
 
     listeners: [],

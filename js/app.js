@@ -27,6 +27,7 @@ async function init() {
         // Wire View Toggles
         const btnViewRooms = document.getElementById('btn-view-rooms');
         const btnViewStores = document.getElementById('btn-view-stores');
+        const btnCoreOnly = document.getElementById('btn-core-only');
 
         btnViewStores.addEventListener('click', () => {
             Store.setState({ viewMode: 'stores', currentRoom: 'All' });
@@ -41,6 +42,23 @@ async function init() {
             btnViewStores.classList.remove('active');
             UI.renderCarousel(Store.state.items);
         });
+        
+        if (btnCoreOnly) {
+            btnCoreOnly.addEventListener('click', () => {
+                const isCoreOnly = !Store.state.coreOnly;
+                Store.setState({ coreOnly: isCoreOnly });
+                
+                if (isCoreOnly) {
+                    btnCoreOnly.style.background = 'rgba(255,255,255,0.1)';
+                    btnCoreOnly.style.color = 'var(--text-primary)';
+                } else {
+                    btnCoreOnly.style.background = 'transparent';
+                    btnCoreOnly.style.color = 'var(--text-secondary)';
+                }
+                
+                UI.renderCarousel(Store.state.items);
+            });
+        }
 
         const data = await fetchAPI('getInitialData');
         Store.setState({
@@ -200,22 +218,30 @@ async function init() {
                             product_url: url, is_purchased: false
                         };
 
-                        // Inject Scenario Select dynamically if missing
-                        if (!document.getElementById('review-scenario')) {
-                            const scenarioHtml = `
-                                <div style="margin-top: 12px; display: flex; flex-direction: column;">
-                                    <label style="font-size: 12px; color: var(--text-light); margin-bottom: 4px;">Scenario / Tier</label>
-                                    <select id="review-scenario" style="width: 100%; background: transparent; color: white; border: 1px solid rgba(173, 171, 158, 0.15); padding: 8px; border-radius: 4px; margin-top: 8px;">
-                                        <option value="Balanced" style="color: black;">Balanced</option>
-                                        <option value="Premium" style="color: black;">Premium</option>
-                                        <option value="Pragmatic" style="color: black;">Pragmatic</option>
-                                    </select>
+                        // Inject Nice-to-have Toggle dynamically if missing
+                        if (!document.getElementById('review-nice-to-have')) {
+                            const niceHtml = `
+                                <div id="nice-to-have-container" style="margin-top: 16px; display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; border: 1px solid rgba(173, 171, 158, 0.15);">
+                                    <input type="checkbox" id="review-nice-to-have" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--actions);">
+                                    <label for="review-nice-to-have" style="font-size: 14px; color: var(--text-primary); cursor: pointer; user-select: none;">Nice-to-have</label>
                                 </div>
                             `;
-                            // Insert before dimensions row ideally, or append to review fields container
                             const reviewStore = document.getElementById('review-store');
                             if (reviewStore && reviewStore.parentNode) {
-                                reviewStore.parentNode.insertAdjacentHTML('afterend', scenarioHtml);
+                                reviewStore.parentNode.insertAdjacentHTML('afterend', niceHtml);
+                            }
+                        }
+
+                        // Handle visual state for Alternatives
+                        const niceContainer = document.getElementById('nice-to-have-container');
+                        const isAlternative = window.pendingAlternativeParentId;
+                        if (niceContainer) {
+                            if (isAlternative) {
+                                niceContainer.style.opacity = '0.5';
+                                niceContainer.style.pointerEvents = 'none';
+                            } else {
+                                niceContainer.style.opacity = '1';
+                                niceContainer.style.pointerEvents = 'auto';
                             }
                         }
 
@@ -226,8 +252,8 @@ async function init() {
                         document.getElementById('review-l').value = extracted.dim_l || '';
                         document.getElementById('review-w').value = extracted.dim_w || '';
                         document.getElementById('review-h').value = extracted.dim_h || '';
-                        const scenarioEl = document.getElementById('review-scenario');
-                        if (scenarioEl) scenarioEl.value = 'Balanced';
+                        const niceEl = document.getElementById('review-nice-to-have');
+                        if (niceEl) niceEl.checked = false;
                         
                         // אם אין תמונה, נשים פלייסחולדר
                         if (!currentBase64Image) reviewImg.src = 'https://via.placeholder.com/150?text=No+Image';
@@ -299,14 +325,14 @@ async function init() {
                         pendingItemData.dim_w = document.getElementById('review-w').value;
                         pendingItemData.dim_h = document.getElementById('review-h').value;
                         
-                        const scenarioEl = document.getElementById('review-scenario');
-                        pendingItemData.scenario = scenarioEl ? scenarioEl.value : 'Balanced';
+                        const niceEl = document.getElementById('review-nice-to-have');
+                        pendingItemData.is_nice_to_have = niceEl ? niceEl.checked : false;
 
                         if (!pendingItemData.id) {
                             if (window.pendingAlternativeParentId) {
                                 const parentItem = Store.state.items.find(i => i.id === window.pendingAlternativeParentId);
-                                if (parentItem && parentItem.scenario === pendingItemData.scenario) {
-                                    alert(`Validation Error: Alternative item cannot have the same scenario (${pendingItemData.scenario}) as its Main item.`);
+                                if (parentItem && String(parentItem.is_nice_to_have).toLowerCase() === String(pendingItemData.is_nice_to_have).toLowerCase()) {
+                                    alert(`Validation Error: Alternative item cannot have the same Nice-to-have status as its Main item.`);
                                     btnConfirmSave.textContent = '✓ CONFIRM & SAVE';
                                     btnConfirmSave.disabled = false;
                                     return;
@@ -320,8 +346,8 @@ async function init() {
                         } else if (String(pendingItemData.type).toLowerCase() === 'alternative' && pendingItemData.parent_id) {
                             // Validate edits on existing alternative items
                             const parentItem = Store.state.items.find(i => i.id === pendingItemData.parent_id);
-                            if (parentItem && parentItem.scenario === pendingItemData.scenario) {
-                                alert(`Validation Error: Alternative item cannot have the same scenario (${pendingItemData.scenario}) as its Main item.`);
+                            if (parentItem && String(parentItem.is_nice_to_have).toLowerCase() === String(pendingItemData.is_nice_to_have).toLowerCase()) {
+                                alert(`Validation Error: Alternative item cannot have the same Nice-to-have status as its Main item.`);
                                 btnConfirmSave.textContent = '✓ CONFIRM & SAVE';
                                 btnConfirmSave.disabled = false;
                                 return;
