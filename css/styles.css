@@ -136,7 +136,7 @@ h1, h2, h3, h4, h5, h6, .brand {
 
 /* Render Nodes */
 .render-node {
-    fill: rgba(86, 115, 87, 0.7);
+    fill: color-mix(in srgb, var(--actions) 70%, transparent);
     cursor: pointer;
     pointer-events: auto !important;
     transition: filter 0.3s ease, transform 0.3s ease, fill 0.3s ease;
@@ -145,9 +145,9 @@ h1, h2, h3, h4, h5, h6, .brand {
 }
 
 .render-node:hover {
-    fill: rgba(86, 115, 87, 1);
+    fill: var(--actions);
     transform: scale(1.15);
-    filter: drop-shadow(0 0 5px rgba(86, 115, 87, 0.5));
+    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--actions) 50%, transparent));
 }
 
 /* --- Selected Products Carousel --- */
