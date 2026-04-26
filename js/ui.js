@@ -430,9 +430,11 @@ export const UI = {
 
                 document.getElementById('review-img').src = imgUrl;
 
-                // Open the modal on Step 2
-                document.getElementById('add-step-1').classList.add('hidden');
-                document.getElementById('add-step-2').classList.remove('hidden');
+                // Open the modal and activate the edit pane (Step 2)
+                const step1 = document.getElementById('add-step-1');
+                const step2 = document.getElementById('add-step-2');
+                if (step1) { step1.style.opacity = '0.4'; step1.style.pointerEvents = 'none'; }
+                if (step2) { step2.style.opacity = '1'; step2.style.pointerEvents = 'auto'; }
                 document.getElementById('add-modal').classList.remove('hidden');
             });
         }
