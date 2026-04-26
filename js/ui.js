@@ -206,7 +206,8 @@ export const UI = {
 
         if (Store.state.viewMode === 'rooms') {
             if (Store.state.currentRoom && Store.state.currentRoom !== 'All') {
-                mainItems = mainItems.filter(item => item.room === Store.state.currentRoom);
+                const currentRoomNorm = String(Store.state.currentRoom).trim().toLowerCase();
+                mainItems = mainItems.filter(item => String(item.room || '').trim().toLowerCase() === currentRoomNorm);
             }
             mainItems.forEach(item => {
                 const groupName = item.room || 'Unassigned';
@@ -584,7 +585,9 @@ export const UI = {
 
                 // Trigger render with current room/store filters
                 const filteredItems = Store.state.items.filter(item => {
-                    const roomMatch = !Store.state.currentRoom || item.room === Store.state.currentRoom;
+                    const currentRoomNorm = String(Store.state.currentRoom || '').trim().toLowerCase();
+                    const itemRoomNorm = String(item.room || '').trim().toLowerCase();
+                    const roomMatch = !Store.state.currentRoom || Store.state.currentRoom === 'All' || itemRoomNorm === currentRoomNorm;
                     const storeMatch = Store.state.currentStore === 'All' || item.store === Store.state.currentStore;
                     return roomMatch && storeMatch;
                 });
