@@ -119,28 +119,38 @@ h1, h2, h3, h4, h5, h6, .brand {
     cursor: pointer;
     pointer-events: bounding-box;
     fill: transparent;
-    transition: fill 0.4s ease;
+    transition: fill 0.4s ease, filter 0.4s ease, stroke 0.4s ease;
 }
 
 .room-hitbox:hover,
 .room-hitbox.active,
 .room-hitbox.selected {
-    fill: rgba(86, 115, 87, 0.4);
+    fill: rgba(86, 115, 87, 0.35); /* Translucent Botanical Green */
+    stroke: rgba(173, 171, 158, 0.4); /* Sage Metallic edge for glass reflection */
+    stroke-width: 1.5px;
+    vector-effect: non-scaling-stroke;
+    filter: drop-shadow(0 0 10px rgba(86, 115, 87, 0.5));
+    backdrop-filter: blur(4px); /* Experimental glassmorphism on SVG */
+    -webkit-backdrop-filter: blur(4px);
 }
 
 /* Render Nodes */
 .render-node {
     fill: var(--actions);
+    fill: url(#glass-sphere);
     cursor: pointer;
     pointer-events: auto !important;
-    transition: fill 0.3s ease, filter 0.3s ease;
+    transition: filter 0.3s ease, transform 0.3s ease, fill 0.3s ease;
     transform-origin: center;
     transform-box: fill-box;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 10px rgba(86, 115, 87, 0.5));
 }
 
 .render-node:hover {
     fill: #FFFFFF;
-    filter: drop-shadow(0 0 12px rgba(86, 115, 87, 1));
+    fill: url(#glass-sphere-hover);
+    transform: scale(1.15);
+    filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 16px rgba(173, 171, 158, 0.7));
 }
 
 /* --- Selected Products Carousel --- */
