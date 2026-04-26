@@ -141,8 +141,7 @@ async function init() {
                     cropper = null;
                 }
                 addModal.classList.add('hidden');
-                step1.classList.remove('hidden');
-                step2.classList.add('hidden');
+                if (step2) { step2.style.opacity = '0.4'; step2.style.pointerEvents = 'none'; }
                 currentBase64Image = null;
                 pendingItemData = null;
                 window.pendingEditItem = null;
@@ -263,8 +262,7 @@ async function init() {
                     if (!currentBase64Image) reviewImg.src = 'https://via.placeholder.com/150?text=No+Image';
 
                     // מעבר למסך השני
-                    step1.classList.add('hidden');
-                    step2.classList.remove('hidden');
+                    if (step2) { step2.style.opacity = '1'; step2.style.pointerEvents = 'auto'; }
                     
                     setTimeout(() => initCropper(), 100);
 
@@ -286,26 +284,6 @@ async function init() {
             const btnExtractAi = document.getElementById('btn-extract-ai');
             if (btnExtractAi) {
                 btnExtractAi.addEventListener('click', handleAiExtraction);
-            }
-
-            // חזרה מביקורת אחורה
-            if (btnBackEdit) {
-                btnBackEdit.addEventListener('click', () => {
-                    if (cropper) {
-                        cropper.destroy();
-                        cropper = null;
-                    }
-                    if (window.pendingEditItem) {
-                        // If we are backing out of an edit, fully cancel the flow and clear state
-                        hideAddModal();
-                    } else {
-                        // Regular flow back to step 1
-                        step2.classList.add('hidden');
-                        step1.classList.remove('hidden');
-                        btnText.textContent = 'Analyze';
-                        analyzeBtn.disabled = false;
-                    }
-                });
             }
 
             // שלב 2: אישור ושמירה סופית
