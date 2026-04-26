@@ -312,6 +312,26 @@ h1, h2, h3, h4, h5, h6, .brand {
 .modal-content .price { color: var(--actions); font-size: 1.5rem; font-weight: bold; margin: 0 0 10px 0; font-family: var(--font-main); }
 .details-text a { color: var(--actions); text-decoration: none; font-weight: 600; }
 
+/* --- Tactile Atelier Purchase Button/Pill --- */
+.atelier-purchased-btn, .atelier-purchased-pill {
+    background: rgba(41, 36, 32, 0.5); /* #292420 with low opacity */
+    border: 1px solid var(--accents); /* #adab9e */
+    color: var(--accents); /* #adab9e */
+    padding: 10px;
+    border-radius: 8px;
+    font-family: var(--font-main);
+    font-size: 14px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.atelier-purchased-btn { cursor: pointer; }
+.atelier-purchased-btn:hover { background: var(--cards); color: var(--text-light); border-color: var(--text-light); }
+.atelier-purchased-pill { cursor: default; }
+
 /* --- Custom Scrollbar Styling --- */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }

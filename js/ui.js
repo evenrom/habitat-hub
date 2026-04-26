@@ -307,8 +307,8 @@ export const UI = {
                 </div>
                 <div style="display: flex; align-items: center;">
                     ${isPurchased
-                        ? `<span style="display: inline-flex; align-items: center; justify-content: center; background: rgba(169, 191, 168, 0.1); color: var(--actions); border: 1px solid var(--actions); padding: 8px 14px; border-radius: 999px; font-weight: 700; font-size: 12px;">Purchased</span>`
-                        : `<button id="btn-mark-purchased" style="background: var(--actions); color: var(--onyx); border: none; padding: 8px 14px; border-radius: 999px; font-weight: 700; cursor: pointer; font-size: 12px;">Mark as Purchased</button>`
+                        ? `<span class="atelier-purchased-pill">Purchased</span>`
+                        : `<button id="btn-mark-purchased" class="atelier-purchased-btn">Mark as Purchased</button>`
                     }
                 </div>
             </div>
