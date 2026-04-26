@@ -134,11 +134,11 @@ h1, h2, h3, h4, h5, h6, .brand {
     -webkit-backdrop-filter: blur(4px);
 }
 
-/* --- Render Nodes (Target Dot Style) --- */
+/* --- Render Nodes (Minimal Ring Style) --- */
 .render-node {
-    fill: var(--actions); /* המרכז: ירוק אטום ובולט */
-    stroke: rgba(86, 115, 87, 0.3); /* הטבעת מסביב: ירוקה ושקופה */
-    stroke-width: 8px; /* עובי הטבעת - אפשר להקטין או להגדיל אם צריך */
+    fill: rgba(86, 115, 87, 0.15); /* מילוי כמעט שקוף לחלוטין */
+    stroke: var(--actions); /* קונטור (מסגרת) בצבע ירוק בולט */
+    stroke-width: 3px; /* עובי המסגרת */
     cursor: pointer;
     pointer-events: auto !important;
     transition: all 0.3s ease;
@@ -147,9 +147,9 @@ h1, h2, h3, h4, h5, h6, .brand {
 }
 
 .render-node:hover {
-    fill: var(--text-light); /* במעבר עכבר המרכז יהפוך לבהיר */
-    stroke: rgba(86, 115, 87, 0.6); /* הטבעת תתכהה מעט */
-    transform: scale(1.2); /* הנקודה תגדל קצת למשוב ויזואלי */
+    fill: rgba(86, 115, 87, 0.4); /* המילוי מתחזק מעט כשמרחפים מעל (פידבק למשתמש) */
+    stroke: var(--text-light); /* המסגרת הופכת לבהירה כשמרחפים */
+    transform: scale(1.15); /* הנקודה גדלה מעט */
 }
 
 /* --- Selected Products Carousel --- */
