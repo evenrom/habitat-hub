@@ -188,7 +188,7 @@ export const UI = {
         const section = document.getElementById('room-details');
 
         // Remove filtering out from Store, logic is now grouped and filtering depends on viewMode
-        let mainItems = items.filter(item => String(item.type).toLowerCase() !== 'alternative');
+        let mainItems = (items || []).filter(item => item && item.id && item.name && String(item.type).toLowerCase() !== 'alternative');
         
         // Task 4: Global Core Filter
         if (Store.state.coreOnly) {
@@ -297,9 +297,21 @@ export const UI = {
         const displayPrice = item.actual_price ? item.actual_price : item.price;
         const priceLabel = item.actual_price ? 'PAID' : 'MSRP';
         
+        const isPurchased = item.is_purchased === true || String(item.is_purchased).toLowerCase() === 'true';
+
         document.getElementById('modal-price').innerHTML = `
-            <span style="font-size: 10px; color: var(--text-secondary); vertical-align: middle; margin-right: 8px;">${priceLabel}</span>
-            ₪${new Intl.NumberFormat('en-US').format(displayPrice || 0)}
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font-size: 10px; color: var(--text-secondary);">${priceLabel}</span>
+                    <span style="font-size: 1.35rem; font-weight: 700;">₪${new Intl.NumberFormat('en-US').format(displayPrice || 0)}</span>
+                </div>
+                <div style="display: flex; align-items: center;">
+                    ${isPurchased
+                        ? `<span style="display: inline-flex; align-items: center; justify-content: center; background: rgba(169, 191, 168, 0.1); color: var(--actions); border: 1px solid var(--actions); padding: 8px 14px; border-radius: 999px; font-weight: 700; font-size: 12px;">Purchased</span>`
+                        : `<button id="btn-mark-purchased" style="background: var(--actions); color: var(--onyx); border: none; padding: 8px 14px; border-radius: 999px; font-weight: 700; cursor: pointer; font-size: 12px;">Mark as Purchased</button>`
+                    }
+                </div>
+            </div>
         `;
         
         // הרכבת אזור המפרט הטכני (Dimensions & Store)
@@ -357,19 +369,16 @@ export const UI = {
             }
         }
 
-        // --- הוספת כפתור "נרכש" או תגית "נרכש" ---
-        const isPurchased = item.is_purchased === true || String(item.is_purchased).toLowerCase() === 'true';
-        
-        if (!isPurchased) {
-            detailsHtml += `<button id="btn-mark-purchased" style="width: 100%; margin-top: 16px; margin-bottom: 8px; background: var(--actions); color: var(--onyx); border: none; padding: 12px; border-radius: 8px; font-weight: 700; font-family: var(--font-main); cursor: pointer; transition: 0.2s;">✓ Mark as Purchased</button>`;
-        } else {
-            detailsHtml += `<div style="width: 100%; margin-top: 16px; margin-bottom: 8px; background: rgba(169, 191, 168, 0.1); color: var(--actions); border: 1px solid var(--actions); padding: 12px; border-radius: 8px; font-weight: 700; font-family: var(--font-main); text-align: center; box-sizing: border-box;">✓ Purchased</div>`;
+        if (isPurchased) {
             modalImage.style.opacity = '0.5';
         }
 
-        detailsHtml += `<button id="btn-add-alt-inline" style="width: 100%; margin-top: 8px; background: transparent; border: 1px dashed var(--actions); color: var(--actions); padding: 10px; border-radius: 8px; cursor: pointer;">+ Add Alternative</button>`;
-        detailsHtml += `<button id="btn-edit-item" class="swap-button" style="margin-top: 8px;">✎ Edit Details</button>`;
-        detailsHtml += `</div>`;
+        detailsHtml += `
+            <div style="display: flex; gap: 8px; margin-top: 16px;">
+                <button id="btn-add-alt-inline" style="flex: 1; background: transparent; border: 1px dashed var(--actions); color: var(--actions); padding: 10px; border-radius: 8px; cursor: pointer;">Add Alternative</button>
+                <button id="btn-edit-item" class="swap-button" style="flex: 1; margin: 0;">Edit Details</button>
+            </div>
+        </div>`;
         
         document.getElementById('modal-details').innerHTML = detailsHtml;
 
@@ -432,7 +441,7 @@ export const UI = {
         const btnMarkPurchased = document.getElementById('btn-mark-purchased');
         if (btnMarkPurchased) {
             btnMarkPurchased.addEventListener('click', async () => {
-                btnMarkPurchased.textContent = '⏳ Saving...';
+                btnMarkPurchased.textContent = 'Saving...';
                 btnMarkPurchased.disabled = true;
                 btnMarkPurchased.style.opacity = '0.7';
                 
@@ -454,7 +463,7 @@ export const UI = {
                 } catch (err) {
                     console.error("Failed to mark item as purchased:", err);
                     alert("Failed to update item. Please try again.");
-                    btnMarkPurchased.textContent = '✓ Mark as Purchased';
+                    btnMarkPurchased.textContent = 'Mark as Purchased';
                     btnMarkPurchased.disabled = false;
                     btnMarkPurchased.style.opacity = '1';
                 }

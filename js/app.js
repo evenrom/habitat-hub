@@ -148,9 +148,9 @@ async function init() {
                 window.pendingEditItem = null;
                 if(urlInput) urlInput.value = '';
                 if(dropzoneText) dropzoneText.textContent = 'Drop image, click, or Ctrl+V to paste';
-                if(btnText) btnText.textContent = '🪄 Analyze';
+                if(btnText) btnText.textContent = 'Analyze';
                 if(analyzeBtn) analyzeBtn.disabled = false;
-                if(btnConfirmSave) btnConfirmSave.innerHTML = '✓ CONFIRM & SAVE';
+                if(btnConfirmSave) btnConfirmSave.innerHTML = 'CONFIRM & SAVE';
                 if(btnConfirmSave) btnConfirmSave.disabled = false;
             };
             
@@ -205,7 +205,7 @@ async function init() {
 
                     try {
                         analyzeBtn.disabled = true;
-                        btnText.textContent = '⏳ Analyzing...';
+                        btnText.textContent = 'Analyzing...';
 
                         const analyzeRes = await fetchAPI('analyzeAndUpload', { base64Image: currentBase64Image, productURL: url });
                         const extracted = analyzeRes.extractedData || {};
@@ -267,7 +267,7 @@ async function init() {
                     } catch (error) {
                         console.error('Analyze Error:', error);
                         alert('Failed to analyze. Please try again.');
-                        btnText.textContent = '🪄 Analyze';
+                        btnText.textContent = 'Analyze';
                         analyzeBtn.disabled = false;
                     }
                 });
@@ -287,7 +287,7 @@ async function init() {
                         // Regular flow back to step 1
                         step2.classList.add('hidden');
                         step1.classList.remove('hidden');
-                        btnText.textContent = '🪄 Analyze';
+                        btnText.textContent = 'Analyze';
                         analyzeBtn.disabled = false;
                     }
                 });
@@ -298,7 +298,7 @@ async function init() {
                 btnConfirmSave.addEventListener('click', async () => {
                     try {
                         btnConfirmSave.disabled = true;
-                        btnConfirmSave.textContent = '⏳ SAVING...';
+                        btnConfirmSave.textContent = 'SAVING...';
 
                         if (window.pendingEditItem) {
                             pendingItemData = window.pendingEditItem;
@@ -333,7 +333,7 @@ async function init() {
                                 const parentItem = Store.state.items.find(i => i.id === window.pendingAlternativeParentId);
                                 if (parentItem && String(parentItem.is_nice_to_have).toLowerCase() === String(pendingItemData.is_nice_to_have).toLowerCase()) {
                                     alert(`Validation Error: Alternative item cannot have the same Nice-to-have status as its Main item.`);
-                                    btnConfirmSave.textContent = '✓ CONFIRM & SAVE';
+                                    btnConfirmSave.textContent = 'CONFIRM & SAVE';
                                     btnConfirmSave.disabled = false;
                                     return;
                                 }
@@ -348,7 +348,7 @@ async function init() {
                             const parentItem = Store.state.items.find(i => i.id === pendingItemData.parent_id);
                             if (parentItem && String(parentItem.is_nice_to_have).toLowerCase() === String(pendingItemData.is_nice_to_have).toLowerCase()) {
                                 alert(`Validation Error: Alternative item cannot have the same Nice-to-have status as its Main item.`);
-                                btnConfirmSave.textContent = '✓ CONFIRM & SAVE';
+                                btnConfirmSave.textContent = 'CONFIRM & SAVE';
                                 btnConfirmSave.disabled = false;
                                 return;
                             }
@@ -382,7 +382,7 @@ async function init() {
                     } catch (error) {
                         console.error('Save Error:', error);
                         alert('Failed to save item.');
-                        btnConfirmSave.innerHTML = '✓ CONFIRM & SAVE';
+                        btnConfirmSave.innerHTML = 'CONFIRM & SAVE';
                         btnConfirmSave.disabled = false;
                     }
                 });

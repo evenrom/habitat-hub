@@ -45,6 +45,7 @@ export const Store = {
         let roomStats = {};
 
         items.forEach(item => {
+            if (!item || !item.id || !item.name) return;
             // 1. Strictly exclude Alternatives from math
             if (String(item.type).toLowerCase() === 'alternative') return;
 

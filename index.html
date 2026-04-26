@@ -51,13 +51,13 @@
         <div class="modal-content" style="max-width: 550px;">
             <span class="close-btn-atelier" id="close-add-modal">&times;</span>
             <h2 style="margin-top: 0; margin-bottom: 24px; display: flex; align-items: center; gap: 8px; font-size: 20px;">
-                <span style="color: var(--actions);">✨</span> Magic AI Add
+                <span style="color: var(--actions);">Magic AI Add</span>
             </h2>
             
             <div id="add-step-1">
                 <input type="file" id="add-file-input" accept="image/png, image/jpeg" style="display: none;">
                 <div id="add-dropzone" tabindex="0" style="border: 1px dashed rgba(173, 171, 158, 0.15); border-radius: 8px; padding: 40px 20px; text-align: center; margin-bottom: 24px; cursor: pointer; background: rgba(255,255,255,0.02); transition: background 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='rgba(255,255,255,0.02)'">
-                    <div style="font-size: 24px; margin-bottom: 8px; opacity: 0.8;" id="add-dropzone-icon">📷</div>
+                    <div style="font-size: 24px; margin-bottom: 8px; opacity: 0.8;" id="add-dropzone-icon">Upload</div>
                     <div style="font-size: 14px; font-weight: 500;" id="add-dropzone-text">Drop image, click, or Ctrl+V to paste</div>
                     <div style="font-size: 11px; color: var(--text-secondary); margin-top: 6px;">High-resolution JPG or PNG preferred</div>
                 </div>
@@ -78,28 +78,28 @@
                     
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                         <div style="grid-column: span 2;">
-                            <label style="display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text-secondary); text-transform: uppercase;">Name ✏️</label>
+                            <label style="display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text-secondary); text-transform: uppercase;">Name</label>
                             <input type="text" id="review-name" style="width: 100%; background: transparent; border: none; border-bottom: 1px solid rgba(173, 171, 158, 0.15); color: var(--text-primary); font-size: 14px; padding: 4px 0; font-family: var(--font-main); outline: none; font-weight: 600;">
                         </div>
                         <div>
-                            <label style="display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text-secondary); text-transform: uppercase;">Price (₪) ✏️</label>
+                            <label style="display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text-secondary); text-transform: uppercase;">Price (₪)</label>
                             <input type="number" id="review-price" style="width: 100%; background: transparent; border: none; border-bottom: 1px solid rgba(173, 171, 158, 0.15); color: var(--text-primary); font-size: 14px; padding: 4px 0; font-family: var(--font-main); outline: none;">
                         </div>
                         <div>
-                            <label style="display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text-secondary); text-transform: uppercase;">Store ✏️</label>
+                            <label style="display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text-secondary); text-transform: uppercase;">Store</label>
                             <input type="text" id="review-store" style="width: 100%; background: transparent; border: none; border-bottom: 1px solid rgba(173, 171, 158, 0.15); color: var(--text-primary); font-size: 14px; padding: 4px 0; font-family: var(--font-main); outline: none;">
                         </div>
                         <div style="grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
                             <div>
-                                <label style="display: block; font-size: 10px; color: var(--text-secondary); text-transform: uppercase;">L (cm) ✏️</label>
+                                <label style="display: block; font-size: 10px; color: var(--text-secondary); text-transform: uppercase;">L (cm)</label>
                                 <input type="number" id="review-l" style="width: 100%; background: transparent; border: none; border-bottom: 1px solid rgba(173, 171, 158, 0.15); color: var(--text-primary); font-size: 14px; padding: 4px 0; font-family: var(--font-main); outline: none;">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 10px; color: var(--text-secondary); text-transform: uppercase;">W (cm) ✏️</label>
+                                <label style="display: block; font-size: 10px; color: var(--text-secondary); text-transform: uppercase;">W (cm)</label>
                                 <input type="number" id="review-w" style="width: 100%; background: transparent; border: none; border-bottom: 1px solid rgba(173, 171, 158, 0.15); color: var(--text-primary); font-size: 14px; padding: 4px 0; font-family: var(--font-main); outline: none;">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 10px; color: var(--text-secondary); text-transform: uppercase;">H (cm) ✏️</label>
+                                <label style="display: block; font-size: 10px; color: var(--text-secondary); text-transform: uppercase;">H (cm)</label>
                                 <input type="number" id="review-h" style="width: 100%; background: transparent; border: none; border-bottom: 1px solid rgba(173, 171, 158, 0.15); color: var(--text-primary); font-size: 14px; padding: 4px 0; font-family: var(--font-main); outline: none;">
                             </div>
                         </div>
@@ -108,7 +108,7 @@
                 
                 <div style="display: flex; justify-content: space-between; gap: 12px; margin-top: 16px;">
                     <button id="btn-back-edit" style="flex: 1; background: transparent; border: 1px solid rgba(173, 171, 158, 0.15); color: var(--text-primary); padding: 12px; border-radius: 8px; font-weight: 600; font-family: var(--font-main); cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">← BACK</button>
-                    <button id="btn-confirm-save" style="flex: 2; background: var(--actions); color: var(--onyx); border: none; padding: 12px; border-radius: 8px; font-weight: 700; font-family: var(--font-main); cursor: pointer; transition: transform 0.2s;">✓ CONFIRM & SAVE</button>
+                    <button id="btn-confirm-save" style="flex: 2; background: var(--actions); color: var(--onyx); border: none; padding: 12px; border-radius: 8px; font-weight: 700; font-family: var(--font-main); cursor: pointer; transition: transform 0.2s;">CONFIRM & SAVE</button>
                 </div>
             </div>
         </div>
