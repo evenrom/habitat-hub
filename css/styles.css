@@ -134,20 +134,22 @@ h1, h2, h3, h4, h5, h6, .brand {
     -webkit-backdrop-filter: blur(4px);
 }
 
-/* Render Nodes */
+/* --- Render Nodes (Target Dot Style) --- */
 .render-node {
-    fill: color-mix(in srgb, var(--actions) 70%, transparent);
+    fill: var(--actions); /* המרכז: ירוק אטום ובולט */
+    stroke: rgba(86, 115, 87, 0.3); /* הטבעת מסביב: ירוקה ושקופה */
+    stroke-width: 8px; /* עובי הטבעת - אפשר להקטין או להגדיל אם צריך */
     cursor: pointer;
     pointer-events: auto !important;
-    transition: filter 0.3s ease, transform 0.3s ease, fill 0.3s ease;
+    transition: all 0.3s ease;
     transform-origin: center;
     transform-box: fill-box;
 }
 
 .render-node:hover {
-    fill: var(--actions);
-    transform: scale(1.15);
-    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--actions) 50%, transparent));
+    fill: var(--text-light); /* במעבר עכבר המרכז יהפוך לבהיר */
+    stroke: rgba(86, 115, 87, 0.6); /* הטבעת תתכהה מעט */
+    transform: scale(1.2); /* הנקודה תגדל קצת למשוב ויזואלי */
 }
 
 /* --- Selected Products Carousel --- */
