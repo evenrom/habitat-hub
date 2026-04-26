@@ -96,30 +96,6 @@ export const UI = {
                     svgElement.style.width = '100%';
                     svgElement.style.height = '100%';
                     svgElement.style.display = 'block';
-
-                    // Inject luxury 3D glass definitions
-                    let defs = svgElement.querySelector('defs');
-                    if (!defs) {
-                        defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-                        svgElement.insertBefore(defs, svgElement.firstChild);
-                    }
-                    
-                    const luxuryGradients = `
-                        <radialGradient id="glass-sphere" cx="30%" cy="30%" r="70%">
-                            <!-- Specular highlight -->
-                            <stop offset="0%" stop-color="#ebe1da" stop-opacity="0.9"/>
-                            <stop offset="20%" stop-color="#567357" stop-opacity="0.8"/>
-                            <stop offset="70%" stop-color="#292420" stop-opacity="0.8"/>
-                            <stop offset="100%" stop-color="#17130f" stop-opacity="0.9"/>
-                        </radialGradient>
-                        <radialGradient id="glass-sphere-hover" cx="30%" cy="30%" r="70%">
-                            <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
-                            <stop offset="30%" stop-color="#adab9e" stop-opacity="0.9"/>
-                            <stop offset="80%" stop-color="#567357" stop-opacity="0.9"/>
-                            <stop offset="100%" stop-color="#292420" stop-opacity="1"/>
-                        </radialGradient>
-                    `;
-                    defs.insertAdjacentHTML('beforeend', luxuryGradients);
                 }
             } else {
                 console.error('Failed to load floorplan.svg');

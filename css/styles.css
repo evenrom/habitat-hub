@@ -136,21 +136,18 @@ h1, h2, h3, h4, h5, h6, .brand {
 
 /* Render Nodes */
 .render-node {
-    fill: var(--actions);
-    fill: url(#glass-sphere);
+    fill: rgba(86, 115, 87, 0.7);
     cursor: pointer;
     pointer-events: auto !important;
     transition: filter 0.3s ease, transform 0.3s ease, fill 0.3s ease;
     transform-origin: center;
     transform-box: fill-box;
-    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 10px rgba(86, 115, 87, 0.5));
 }
 
 .render-node:hover {
-    fill: #FFFFFF;
-    fill: url(#glass-sphere-hover);
+    fill: rgba(86, 115, 87, 1);
     transform: scale(1.15);
-    filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 16px rgba(173, 171, 158, 0.7));
+    filter: drop-shadow(0 0 5px rgba(86, 115, 87, 0.5));
 }
 
 /* --- Selected Products Carousel --- */
