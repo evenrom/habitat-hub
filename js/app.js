@@ -150,6 +150,8 @@ async function init() {
                 if(dropzoneText) dropzoneText.textContent = 'Drop image, click, or Ctrl+V to paste';
                 if(btnText) btnText.textContent = 'Analyze';
                 if(analyzeBtn) analyzeBtn.disabled = false;
+                const extractBtn = document.getElementById('btn-extract-ai');
+                if (extractBtn) extractBtn.disabled = false;
                 if(btnConfirmSave) btnConfirmSave.innerHTML = 'CONFIRM & SAVE';
                 if(btnConfirmSave) btnConfirmSave.disabled = false;
             };
@@ -197,80 +199,93 @@ async function init() {
                 reader.readAsDataURL(file);
             }
 
+            // AI Extraction Logic extracted into a named function
+            const handleAiExtraction = async () => {
+                const url = urlInput ? urlInput.value.trim() : '';
+                if (!url && !currentBase64Image) { alert('Please paste an image or URL.'); return; }
+
+                try {
+                    if (analyzeBtn) analyzeBtn.disabled = true;
+                    if (btnText) btnText.textContent = 'Analyzing...';
+
+                    const extractBtn = document.getElementById('btn-extract-ai');
+                    if (extractBtn) extractBtn.disabled = true;
+
+                    const analyzeRes = await fetchAPI('analyzeAndUpload', { base64Image: currentBase64Image, productURL: url });
+                    const extracted = analyzeRes.extractedData || {};
+                    
+                    // שמירת הנתונים זמנית
+                    pendingItemData = {
+                        room: Store.state.currentRoom || 'Unassigned',
+                        type: 'Main', parent_id: '',
+                        image_id: analyzeRes.image_id || '',
+                        product_url: url, is_purchased: false
+                    };
+
+                    // Inject Nice-to-have Toggle dynamically if missing
+                    if (!document.getElementById('review-nice-to-have')) {
+                        const niceHtml = `
+                            <div id="nice-to-have-container" style="margin-top: 16px; display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; border: 1px solid rgba(173, 171, 158, 0.15);">
+                                <input type="checkbox" id="review-nice-to-have" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--actions);">
+                                <label for="review-nice-to-have" style="font-size: 14px; color: var(--text-primary); cursor: pointer; user-select: none;">Nice-to-have</label>
+                            </div>
+                        `;
+                        const reviewStore = document.getElementById('review-store');
+                        if (reviewStore && reviewStore.parentNode) {
+                            reviewStore.parentNode.insertAdjacentHTML('afterend', niceHtml);
+                        }
+                    }
+
+                    // Handle visual state for Alternatives
+                    const niceContainer = document.getElementById('nice-to-have-container');
+                    const isAlternative = window.pendingAlternativeParentId;
+                    if (niceContainer) {
+                        if (isAlternative) {
+                            niceContainer.style.opacity = '0.5';
+                            niceContainer.style.pointerEvents = 'none';
+                        } else {
+                            niceContainer.style.opacity = '1';
+                            niceContainer.style.pointerEvents = 'auto';
+                        }
+                    }
+
+                    // אכלוס שדות העריכה
+                    document.getElementById('review-name').value = extracted.name || '';
+                    document.getElementById('review-price').value = extracted.price || '';
+                    document.getElementById('review-store').value = extracted.store || '';
+                    document.getElementById('review-l').value = extracted.dim_l || '';
+                    document.getElementById('review-w').value = extracted.dim_w || '';
+                    document.getElementById('review-h').value = extracted.dim_h || '';
+                    const niceEl = document.getElementById('review-nice-to-have');
+                    if (niceEl) niceEl.checked = false;
+                    
+                    // אם אין תמונה, נשים פלייסחולדר
+                    if (!currentBase64Image) reviewImg.src = 'https://via.placeholder.com/150?text=No+Image';
+
+                    // מעבר למסך השני
+                    step1.classList.add('hidden');
+                    step2.classList.remove('hidden');
+                    
+                    setTimeout(() => initCropper(), 100);
+
+                } catch (error) {
+                    console.error('Analyze Error:', error);
+                    alert('Failed to analyze. Please try again.');
+                    if (btnText) btnText.textContent = 'Analyze';
+                    if (analyzeBtn) analyzeBtn.disabled = false;
+                    const extractBtn = document.getElementById('btn-extract-ai');
+                    if (extractBtn) extractBtn.disabled = false;
+                }
+            };
+
             // שלב 1: לחיצה על "Analyze" (ניתוח ומעבר למסך עריכה)
             if (analyzeBtn) {
-                analyzeBtn.addEventListener('click', async () => {
-                    const url = urlInput.value.trim();
-                    if (!url && !currentBase64Image) { alert('Please paste an image or URL.'); return; }
-
-                    try {
-                        analyzeBtn.disabled = true;
-                        btnText.textContent = 'Analyzing...';
-
-                        const analyzeRes = await fetchAPI('analyzeAndUpload', { base64Image: currentBase64Image, productURL: url });
-                        const extracted = analyzeRes.extractedData || {};
-                        
-                        // שמירת הנתונים זמנית
-                        pendingItemData = {
-                            room: Store.state.currentRoom || 'Unassigned',
-                            type: 'Main', parent_id: '',
-                            image_id: analyzeRes.image_id || '',
-                            product_url: url, is_purchased: false
-                        };
-
-                        // Inject Nice-to-have Toggle dynamically if missing
-                        if (!document.getElementById('review-nice-to-have')) {
-                            const niceHtml = `
-                                <div id="nice-to-have-container" style="margin-top: 16px; display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; border: 1px solid rgba(173, 171, 158, 0.15);">
-                                    <input type="checkbox" id="review-nice-to-have" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--actions);">
-                                    <label for="review-nice-to-have" style="font-size: 14px; color: var(--text-primary); cursor: pointer; user-select: none;">Nice-to-have</label>
-                                </div>
-                            `;
-                            const reviewStore = document.getElementById('review-store');
-                            if (reviewStore && reviewStore.parentNode) {
-                                reviewStore.parentNode.insertAdjacentHTML('afterend', niceHtml);
-                            }
-                        }
-
-                        // Handle visual state for Alternatives
-                        const niceContainer = document.getElementById('nice-to-have-container');
-                        const isAlternative = window.pendingAlternativeParentId;
-                        if (niceContainer) {
-                            if (isAlternative) {
-                                niceContainer.style.opacity = '0.5';
-                                niceContainer.style.pointerEvents = 'none';
-                            } else {
-                                niceContainer.style.opacity = '1';
-                                niceContainer.style.pointerEvents = 'auto';
-                            }
-                        }
-
-                        // אכלוס שדות העריכה
-                        document.getElementById('review-name').value = extracted.name || '';
-                        document.getElementById('review-price').value = extracted.price || '';
-                        document.getElementById('review-store').value = extracted.store || '';
-                        document.getElementById('review-l').value = extracted.dim_l || '';
-                        document.getElementById('review-w').value = extracted.dim_w || '';
-                        document.getElementById('review-h').value = extracted.dim_h || '';
-                        const niceEl = document.getElementById('review-nice-to-have');
-                        if (niceEl) niceEl.checked = false;
-                        
-                        // אם אין תמונה, נשים פלייסחולדר
-                        if (!currentBase64Image) reviewImg.src = 'https://via.placeholder.com/150?text=No+Image';
-
-                        // מעבר למסך השני
-                        step1.classList.add('hidden');
-                        step2.classList.remove('hidden');
-                        
-                        setTimeout(() => initCropper(), 100);
-
-                    } catch (error) {
-                        console.error('Analyze Error:', error);
-                        alert('Failed to analyze. Please try again.');
-                        btnText.textContent = 'Analyze';
-                        analyzeBtn.disabled = false;
-                    }
-                });
+                analyzeBtn.addEventListener('click', handleAiExtraction);
+            }
+            
+            const btnExtractAi = document.getElementById('btn-extract-ai');
+            if (btnExtractAi) {
+                btnExtractAi.addEventListener('click', handleAiExtraction);
             }
 
             // חזרה מביקורת אחורה
