@@ -112,7 +112,7 @@ async function init() {
             cropper = new Cropper(reviewImg, { viewMode: 1, autoCropArea: 1, aspectRatio: 3 / 2 });
         }
 
-        const fabButton = document.getElementById('fab');
+        const fabButton = document.getElementById('fab') || document.querySelector('.fab-pill');
         const addModal = document.getElementById('add-modal');
         const closeAddBtn = document.getElementById('close-add-modal');
         const cancelAddBtn = document.getElementById('cancel-add');

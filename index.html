@@ -38,7 +38,16 @@
     <button id="fab" class="fab-pill"><span>+</span> Add</button>
 
     <div id="item-modal" class="modal hidden">
-        <div id="add-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-btn-atelier">&times;</span>
+            <img id="modal-image" src="" alt="Item Image">
+            <h2 id="modal-title"></h2>
+            <div class="price" id="modal-price"></div>
+            <div id="modal-details" class="details-text"></div>
+        </div>
+    </div>
+
+    <div id="add-modal" class="modal hidden">
         <div class="modal-content" style="width: 900px; max-width: 95vw;">
             <span class="close-btn-atelier" id="close-add-modal">&times;</span>
             <h2 style="margin-top: 0; margin-bottom: 24px; display: flex; align-items: center; gap: 8px; font-size: 20px;">
