@@ -323,27 +323,11 @@ async function init() {
 
                         if (!pendingItemData.id) {
                             if (window.pendingAlternativeParentId) {
-                                const parentItem = Store.state.items.find(i => i.id === window.pendingAlternativeParentId);
-                                if (parentItem && String(parentItem.is_nice_to_have).toLowerCase() === String(pendingItemData.is_nice_to_have).toLowerCase()) {
-                                    alert(`Validation Error: Alternative item cannot have the same Nice-to-have status as its Main item.`);
-                                    btnConfirmSave.textContent = 'CONFIRM & SAVE';
-                                    btnConfirmSave.disabled = false;
-                                    return;
-                                }
                                 pendingItemData.type = 'Alternative';
                                 pendingItemData.parent_id = window.pendingAlternativeParentId;
                             } else {
                                 pendingItemData.type = 'Main';
                                 pendingItemData.parent_id = '';
-                            }
-                        } else if (String(pendingItemData.type).toLowerCase() === 'alternative' && pendingItemData.parent_id) {
-                            // Validate edits on existing alternative items
-                            const parentItem = Store.state.items.find(i => i.id === pendingItemData.parent_id);
-                            if (parentItem && String(parentItem.is_nice_to_have).toLowerCase() === String(pendingItemData.is_nice_to_have).toLowerCase()) {
-                                alert(`Validation Error: Alternative item cannot have the same Nice-to-have status as its Main item.`);
-                                btnConfirmSave.textContent = 'CONFIRM & SAVE';
-                                btnConfirmSave.disabled = false;
-                                return;
                             }
                         }
 
