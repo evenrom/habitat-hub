@@ -73,8 +73,7 @@ export const UI = {
     },
 
     updateBudget(stats) {
-        // Deprecated: Budget display moved to the Finance Dashboard modal.
-        return;
+        if (!document.getElementById('finance-modal')?.classList.contains('hidden')) this.renderFinanceDashboard();
     },
 
     async loadAndInjectSVG(url) {
@@ -551,13 +550,20 @@ export const UI = {
         const newSelectBtn = selectPrimaryBtn.cloneNode(true);
         selectPrimaryBtn.parentNode.replaceChild(newSelectBtn, selectPrimaryBtn);
 
+        // Swapping a paid item would remove its spending from the selected budget.
+        if ([mainItem, altItem].some(item => String(item.is_purchased).toLowerCase() === 'true')) {
+            newSelectBtn.disabled = true;
+            newSelectBtn.textContent = 'Purchased option — review payment record before swapping';
+        }
+
         newSelectBtn.addEventListener('click', async () => {
             newSelectBtn.textContent = 'Swapping...';
             newSelectBtn.disabled = true;
 
             try {
-                // 1. Promote alt to Main (and forcefully set is_nice_to_have to false)
-                await fetchAPI('updateItem', { item: { id: altItem.id, type: 'Main', parent_id: '', is_nice_to_have: false } });
+                // Preserve the priority of the furniture choice when selecting another option.
+                const priority = String(mainItem.is_nice_to_have).toLowerCase() === 'true';
+                await fetchAPI('updateItem', { item: { id: altItem.id, type: 'Main', parent_id: '', is_nice_to_have: priority } });
 
                 // 2. Demote main to Alternative
                 await fetchAPI('updateItem', { item: { id: mainItem.id, type: 'Alternative', parent_id: altItem.id } });
@@ -565,7 +571,7 @@ export const UI = {
                 // Update local store state
                 altItem.type = 'Main';
                 altItem.parent_id = '';
-                altItem.is_nice_to_have = false;
+                altItem.is_nice_to_have = priority;
 
                 mainItem.type = 'Alternative';
                 mainItem.parent_id = altItem.id;
@@ -616,64 +622,27 @@ export const UI = {
         };
     },
 
-    renderFinanceDashboard(items) {
+    renderFinanceDashboard() {
         const container = document.getElementById('finance-details');
         if (!container) return;
-
-        const budgetStats = Store.getBudgetStats();
-        const global = budgetStats.global;
-        const rooms = budgetStats.rooms;
-        
-        let html = '<div style="display: flex; flex-direction: column; gap: 24px;">';
-
-        // --- Global Stats ---
-        const globalPercent = global.grandTotal > 0 ? Math.min((global.spent / global.grandTotal) * 100, 100) : 0;
-        
-        html += `
-        <div style="background: rgba(23, 19, 15, 0.8); border: 1px solid var(--actions); border-radius: 8px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-                <strong style="font-size: 18px; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.1em; font-family: var(--font-headings);">Global Budget</strong>
-                <span style="font-size: 16px; color: var(--actions); font-weight: 700; font-family: var(--font-main);">Est: ₪${new Intl.NumberFormat('en-US').format(global.grandTotal)}</span>
-            </div>
-            <div style="width: 100%; background: rgba(0,0,0,0.5); height: 10px; border-radius: 5px; overflow: hidden; margin-bottom: 16px;">
-                <div style="width: ${globalPercent}%; height: 100%; background: var(--actions); transition: width 0.5s ease-out;"></div>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-size: 14px; font-family: var(--font-main); margin-bottom: 8px;">
-                <span style="color: var(--text-primary); font-weight: 600;">Spent: ₪${new Intl.NumberFormat('en-US').format(global.spent)}</span>
-                <span style="color: #adab9e;">Remaining: ₪${new Intl.NumberFormat('en-US').format(global.grandTotal - global.spent)}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-size: 13px; font-family: var(--font-main); border-top: 1px solid rgba(173, 171, 158, 0.2); padding-top: 8px;">
-                <span style="color: #adab9e;">Core: ₪${new Intl.NumberFormat('en-US').format(global.coreTotal)}</span>
-                <span style="color: #adab9e;">Nice-to-have: ₪${new Intl.NumberFormat('en-US').format(global.niceToHaveTotal)}</span>
-            </div>
-        </div>
-        
-        <h3 style="font-family: var(--font-headings); font-size: 16px; color: var(--text-primary); margin: 0 0 -8px 0; border-bottom: 1px solid rgba(173, 171, 158, 0.2); padding-bottom: 8px;">Per-Room Breakdown</h3>
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px;">
-        `;
-
-        // --- Room Breakdowns ---
-        for (const roomName in rooms) {
-            const r = rooms[roomName];
-            const roomPercent = r.roomTotal > 0 ? Math.min((r.spent / r.roomTotal) * 100, 100) : 0;
-            
-            html += `
-            <div style="background: rgba(41, 36, 32, 0.6); border: 1px solid rgba(173, 171, 158, 0.15); border-radius: 8px; padding: 12px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <strong style="font-size: 14px; color: var(--text-primary); font-family: var(--font-headings);">${roomName}</strong>
-                    <span style="font-size: 13px; color: var(--actions); font-weight: 600;">₪${new Intl.NumberFormat('en-US').format(r.roomTotal)}</span>
-                </div>
-                <div style="width: 100%; background: rgba(0,0,0,0.5); height: 6px; border-radius: 3px; overflow: hidden; margin-bottom: 8px;">
-                    <div style="width: ${roomPercent}%; height: 100%; background: var(--actions);"></div>
-                </div>
-                <div style="display: flex; justify-content: space-between; font-size: 12px; font-family: var(--font-main);">
-                    <span style="color: #adab9e;">Core: ₪${new Intl.NumberFormat('en-US').format(r.coreTotal)}</span>
-                    <span style="color: #adab9e;">Nice: ₪${new Intl.NumberFormat('en-US').format(r.niceToHaveTotal)}</span>
-                </div>
-            </div>`;
-        }
-
-        html += '</div></div>';
-        container.innerHTML = html;
+        const { global, rooms, warnings } = Store.getBudgetStats();
+        const format = value => '₪' + new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(value);
+        const escape = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+        const roomLabel = name => name.replace(/([a-z])([A-Z])/g, '$1 $2');
+        const row = (label, group, kind) => '<tr class="' + kind + '"><th scope="row">' + label + '</th><td>' + format(group.paid) + '</td><td class="remaining">' + format(group.remaining) + '</td><td>' + format(group.total) + '</td></tr>';
+        const table = stats => '<div class="finance-table-wrap"><table class="finance-table"><thead><tr><th scope="col">Priority</th><th scope="col">Paid*</th><th scope="col">Left to spend</th><th scope="col">Expected total</th></tr></thead><tbody>' + row('Required', stats.required, 'required') + row('Nice to have', stats.optional, 'optional') + '</tbody><tfoot><tr><th scope="row">Combined</th><td>' + format(stats.spent) + '</td><td>' + format(stats.remaining) + '</td><td>' + format(stats.grandTotal) + '</td></tr></tfoot></table></div>';
+        const missing = global.required.unpriced + global.optional.unpriced;
+        const estimated = global.required.estimatedPaid + global.optional.estimatedPaid;
+        container.innerHTML = '<p class="finance-intro">Your whole apartment · selected items only. Nice to have means optional.</p>' +
+            '<div class="finance-highlights"><section class="finance-highlight required"><span>Required · left to spend</span><strong>' + format(global.required.remaining) + '</strong><small>To complete your essentials</small></section>' +
+            '<section class="finance-highlight optional"><span>Nice to have · left to spend</span><strong>' + format(global.optional.remaining) + '</strong><small>Only if you choose to buy</small></section></div>' +
+            '<section class="finance-summary"><h3>Apartment spending</h3>' + table(global) + '</section>' +
+            '<p class="finance-note">*Paid treats purchased items as fully paid, using actual price when available. Remaining uses prices of unpurchased items; discounts on past purchases do not change it. Alternatives are excluded.</p>' +
+            (estimated ? '<p class="finance-notice">' + estimated + ' purchased item(s) have no actual price. Their listed prices are used in Paid.</p>' : '') +
+            (missing ? '<p class="finance-notice">' + missing + ' selected item(s) have missing or invalid prices. Totals are incomplete.</p>' : '') +
+            (warnings.length ? '<details class="finance-notice" open><summary>Check purchase records (' + warnings.length + ')</summary><ul>' + warnings.map(warning => '<li>' + escape(warning) + '</li>').join('') + '</ul></details>' : '') +
+            '<h3 class="finance-room-heading">Spending by room</h3><p class="finance-note">Rooms with the most required spending left appear first.</p><div class="finance-rooms">' +
+            Object.entries(rooms).sort((a, b) => b[1].required.remaining - a[1].required.remaining || a[0].localeCompare(b[0])).map(([name, stats]) => '<section class="finance-room"><h4>' + escape(roomLabel(name)) + '</h4>' + (stats.required.count + stats.optional.count ? table(stats) : '<p class="finance-note">No selected items yet.</p>') + '</section>').join('') + '</div>' +
+            (!global.required.count && !global.optional.count ? '<p class="finance-note">Add items to start planning your apartment spending.</p>' : '');
     },
 };

@@ -33,56 +33,50 @@ export const Store = {
     },
 
     getBudgetStats: function() {
-        const items = this.state.items || [];
-        
-        let globalStats = {
-            coreTotal: 0,
-            niceToHaveTotal: 0,
-            grandTotal: 0,
-            spent: 0
-        };
-
-        let roomStats = {};
-
-        items.forEach(item => {
-            if (!item || !item.id || !item.name) return;
-            // 1. Strictly exclude Alternatives from math
-            if (String(item.type).toLowerCase() === 'alternative') return;
-
-            const price = Number(item.price) || 0;
-            const actualPrice = Number(item.actual_price) || price;
-            const isPurchased = String(item.is_purchased).toLowerCase() === 'true';
-            const isNiceToHave = String(item.is_nice_to_have).toLowerCase() === 'true';
-            const room = item.room || 'Unassigned';
-
-            // Initialize room if it doesn't exist
-            if (!roomStats[room]) {
-                roomStats[room] = { coreTotal: 0, niceToHaveTotal: 0, roomTotal: 0, spent: 0 };
-            }
-
-            // Calculate Spent
-            if (isPurchased) {
-                globalStats.spent += actualPrice;
-                roomStats[room].spent += actualPrice;
-            }
-
-            // Calculate Buckets
-            if (isNiceToHave) {
-                globalStats.niceToHaveTotal += price;
-                roomStats[room].niceToHaveTotal += price;
-            } else {
-                globalStats.coreTotal += price;
-                roomStats[room].coreTotal += price;
-            }
-
-            // Calculate Totals
-            globalStats.grandTotal += price;
-            roomStats[room].roomTotal += price;
-        });
-
-        return {
-            global: globalStats,
-            rooms: roomStats
-        };
+        return calculateBudget(this.state.items, this.state.config.Room_List);
     }
 };
+
+const flag = value => String(value).trim().toLowerCase() === 'true';
+const money = value => {
+    if (value === null || value === undefined || String(value).trim() === '') return null;
+    const number = Number(value);
+    return Number.isFinite(number) && number >= 0 ? number : null;
+};
+
+export function calculateBudget(items = [], configuredRooms = []) {
+    const bucket = () => ({ paid: 0, remaining: 0, total: 0, count: 0, unpriced: 0, estimatedPaid: 0 });
+    const summary = () => ({ required: bucket(), optional: bucket(), spent: 0, remaining: 0, grandTotal: 0 });
+    const global = summary();
+    const rooms = Object.create(null);
+    const warnings = [];
+    if (Array.isArray(configuredRooms)) configuredRooms.filter(Boolean).forEach(room => { rooms[room] = summary(); });
+    for (const item of items || []) {
+        if (!item || !item.id || !item.name) continue;
+        if (String(item.type).trim().toLowerCase() === 'alternative') {
+            if (flag(item.is_purchased)) warnings.push(`${item.name}: marked purchased but excluded as an alternative. Check which option was bought.`);
+            continue;
+        }
+        const room = String(item.room || '').trim() || 'Unassigned';
+        rooms[room] ||= summary();
+        const category = flag(item.is_nice_to_have) ? 'optional' : 'required';
+        const purchased = flag(item.is_purchased);
+        const estimate = money(item.price);
+        const actual = money(item.actual_price);
+        const amount = purchased ? actual ?? estimate : estimate;
+        for (const target of [global, rooms[room]]) {
+            const group = target[category];
+            group.count++;
+            if (amount === null) group.unpriced++;
+            if (purchased && actual === null) group.estimatedPaid++;
+            group[purchased ? 'paid' : 'remaining'] += amount ?? 0;
+        }
+    }
+    for (const target of [global, ...Object.values(rooms)]) {
+        for (const group of [target.required, target.optional]) group.total = group.paid + group.remaining;
+        target.spent = target.required.paid + target.optional.paid;
+        target.remaining = target.required.remaining + target.optional.remaining;
+        target.grandTotal = target.spent + target.remaining;
+    }
+    return { global, rooms, warnings };
+}

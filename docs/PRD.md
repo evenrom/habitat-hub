@@ -14,7 +14,7 @@
   * The dashboard must display a per-room breakdown: [Core Cost] | [Nice-to-have Cost] | [Total Room Cost], alongside a Global Project Summary.
 * **Display Filtering:** * A global UI toggle to filter the view and display *only* "Core" items (hiding Nice-to-have and Alternatives).
 * **Swap Logic:**
-  * When an Alternative item is promoted to a Main item (Swap), its `is_nice_to_have` status MUST be reset to `false`.
+  * When an Alternative item is promoted to a Main item (Swap), its `is_nice_to_have` status is inherited from the current Main item. Purchased options cannot be swapped until their payment records are reviewed.
 * **Spatial Canvas (SVG):**
   * Interactive blueprint.
   * Distinct hitboxes for 'Kitchen' and 'Foyer'.

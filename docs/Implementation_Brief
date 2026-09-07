@@ -16,7 +16,7 @@ This project is optimized for Amy's workflow. All frontend changes are managed d
 
 ### Validation & Swaps (in `ui.js`)
 * **Edit Modal:** If `parent_id` is not empty (item is Alternative), disable the `is_nice_to_have` toggle UI.
-* **Swap Function:** When calling the `updateItem` API to promote an Alternative to Main, the payload MUST explicitly include `is_nice_to_have: false` to reset the state.
+* **Swap Function:** When calling the `updateItem` API to promote an Alternative to Main, the payload must preserve the current Main item's `is_nice_to_have` priority. Block swaps involving purchased options to avoid dropping recorded spending.
 
 ## 4. Database Schema (Google Sheets)
 **Sheet: 'Items'**
