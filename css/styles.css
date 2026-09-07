@@ -497,14 +497,7 @@ h1, h2, h3, h4, h5, h6, .brand {
 #planning-panel { min-width: 0; min-height: 0; padding: 24px 20px 90px; box-sizing: border-box; background: var(--surface); }
 #planning-panel h2 { font-size: 20px; margin: 0 0 8px; }
 .planner-note { color: var(--accents); font-size: 12px; line-height: 1.6; margin: 0 0 14px; }
-#room-summaries { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.room-summary { display: flex; flex-direction: column; gap: 7px; text-align: left; background: #24201b; border: 1px solid #403b33; border-radius: 10px; padding: 12px; color: var(--text-light); font: inherit; cursor: pointer; }
-.room-summary strong { font-size: 13px; }
-.room-summary small { font-size: 11px; color: var(--accents); }
-.room-required { color: #b6d4b8; font-size: 12px; }
-.room-summary[aria-pressed="true"] { background: #253127; border-color: #8cac8e; }
-.room-summary:hover { border-color: #8cac8e; }
-.item-filters { margin: 24px 0; padding: 18px 0; border-top: 1px solid #403b33; border-bottom: 1px solid #403b33; }
+.item-filters { margin: 0 0 24px; padding: 0 0 18px; border-bottom: 1px solid #403b33; }
 .filter-row { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
 .filter-row button, .text-button { font: inherit; font-size: 12px; min-height: 40px; border-radius: 8px; padding: 8px 10px; cursor: pointer; background: transparent; color: var(--accents); border: 1px solid #403b33; }
 .filter-row button[aria-pressed="true"] { color: var(--text-light); background: #354338; border-color: #8cac8e; }

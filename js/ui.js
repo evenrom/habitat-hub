@@ -21,30 +21,6 @@ export const UI = {
 
     renderPlanner() {
         const state = Store.state;
-        const summaries = document.getElementById('room-summaries');
-        if (!summaries) return;
-        const stats = Store.getBudgetStats();
-        summaries.replaceChildren();
-        const addRoom = (name, budget) => {
-            const button = document.createElement('button');
-            button.className = 'room-summary';
-            button.dataset.room = name;
-            button.setAttribute('aria-pressed', String(state.currentRoom === name));
-            const title = document.createElement('strong');
-            title.textContent = name === 'All' ? 'All rooms' : this.roomLabel(name);
-            const amount = document.createElement('span');
-            amount.className = 'room-required';
-            amount.textContent = '₪' + new Intl.NumberFormat('en-US').format(budget.required.remaining) + ' required left';
-            const progress = document.createElement('small');
-            const count = budget.required.count + budget.optional.count;
-            progress.textContent = count ? (budget.required.purchasedCount + budget.optional.purchasedCount) + ' of ' + count + ' purchased' : 'No furniture yet';
-            if (budget.required.unpriced) progress.textContent += ' · prices incomplete';
-            button.append(title, amount, progress);
-            button.addEventListener('click', () => this.selectRoom(name));
-            summaries.appendChild(button);
-        };
-        addRoom('All', stats.global);
-        Object.entries(stats.rooms).forEach(([name, budget]) => addRoom(name, budget));
         document.querySelectorAll('[data-purchase]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.purchase === state.purchaseFilter)));
         document.querySelectorAll('[data-priority]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.priority === state.priorityFilter)));
         for (const mode of ['rooms', 'stores']) {
