@@ -4,6 +4,64 @@ import { fetchAPI } from './api.js';
 export const UI = {
     lazyLoadObserver: null,
 
+    roomLabel(name) {
+        return String(name).replace(/([a-z])([A-Z])/g, '$1 $2');
+    },
+
+    selectRoom(room) {
+        Store.setState({ viewMode: 'rooms', currentRoom: room });
+        this.focusResults();
+    },
+
+    focusResults() {
+        const title = document.getElementById('results-title');
+        title?.focus({ preventScroll: true });
+        title?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    },
+
+    renderPlanner() {
+        const state = Store.state;
+        const summaries = document.getElementById('room-summaries');
+        if (!summaries) return;
+        const stats = Store.getBudgetStats();
+        summaries.replaceChildren();
+        const addRoom = (name, budget) => {
+            const button = document.createElement('button');
+            button.className = 'room-summary';
+            button.dataset.room = name;
+            button.setAttribute('aria-pressed', String(state.currentRoom === name));
+            const title = document.createElement('strong');
+            title.textContent = name === 'All' ? 'All rooms' : this.roomLabel(name);
+            const amount = document.createElement('span');
+            amount.className = 'room-required';
+            amount.textContent = '₪' + new Intl.NumberFormat('en-US').format(budget.required.remaining) + ' required left';
+            const progress = document.createElement('small');
+            const count = budget.required.count + budget.optional.count;
+            progress.textContent = count ? (budget.required.purchasedCount + budget.optional.purchasedCount) + ' of ' + count + ' purchased' : 'No furniture yet';
+            if (budget.required.unpriced) progress.textContent += ' · prices incomplete';
+            button.append(title, amount, progress);
+            button.addEventListener('click', () => this.selectRoom(name));
+            summaries.appendChild(button);
+        };
+        addRoom('All', stats.global);
+        Object.entries(stats.rooms).forEach(([name, budget]) => addRoom(name, budget));
+        document.querySelectorAll('[data-purchase]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.purchase === state.purchaseFilter)));
+        document.querySelectorAll('[data-priority]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.priority === state.priorityFilter)));
+        for (const mode of ['rooms', 'stores']) {
+            const button = document.getElementById('btn-view-' + mode);
+            button.classList.toggle('active', state.viewMode === mode);
+            button.setAttribute('aria-pressed', String(state.viewMode === mode));
+        }
+        document.querySelectorAll('.room-hitbox').forEach(hitbox => {
+            hitbox.classList.toggle('selected', hitbox.dataset.roomId === state.currentRoom);
+        });
+        const select = document.getElementById('store-filter');
+        const stores = [...new Set(state.items.filter(item => item?.id && String(item.type).toLowerCase() !== 'alternative').map(item => item.store).filter(Boolean))].sort();
+        select.replaceChildren(new Option('All stores', 'All'), ...stores.map(name => new Option(name, name)));
+        select.value = state.currentStore;
+        this.renderCarousel();
+    },
+
     initEscapeListener() {
         if (!this.escapeListenerAttached) {
             document.addEventListener('keydown', (e) => {
@@ -137,7 +195,7 @@ export const UI = {
 
         // 2. Direct Binding for Room Hitboxes (Existing logic)
         const hitboxes = document.querySelectorAll('.room-hitbox');
-        const isMobile = window.matchMedia('(pointer: coarse)').matches;
+
 
         hitboxes.forEach(hitbox => {
             // Apply vector effects...
@@ -154,17 +212,7 @@ export const UI = {
                 const roomId = hitbox.getAttribute('data-room-id');
                 console.log(`🛠️ Debug: Clicked Room Hitbox -> ${roomId}`);
 
-                if (isMobile) {
-                    if (hitbox.classList.contains('selected') || hitbox.classList.contains('active')) {
-                        hitbox.classList.remove('selected', 'active');
-                        onRoomSelect(roomId);
-                    } else {
-                        hitboxes.forEach(hb => hb.classList.remove('selected', 'active'));
-                        hitbox.classList.add('selected', 'active');
-                    }
-                } else {
-                    onRoomSelect(roomId);
-                }
+                onRoomSelect(roomId);
             });
         });
 
@@ -176,67 +224,44 @@ export const UI = {
                     console.log("🛠️ Debug: Clicked map background, resetting state.");
                     Store.setState({ viewMode: 'rooms', currentRoom: 'All' });
                     document.querySelectorAll('.room-hitbox').forEach(hb => hb.classList.remove('selected', 'active'));
-                    const mainItems = Store.state.items.filter(item => String(item.type).toLowerCase() !== 'alternative');
-                    UI.renderCarousel(mainItems);
                 }
             });
         }
     },
 
-    renderCarousel(items) {
+    renderCarousel() {
+        this.lazyLoadObserver?.disconnect();
         const section = document.getElementById('room-details');
 
-        // Remove filtering out from Store, logic is now grouped and filtering depends on viewMode
-        let mainItems = (items || []).filter(item => item && item.id && item.name && String(item.type).toLowerCase() !== 'alternative');
-        
-        // Task 4: Global Core Filter
-        if (Store.state.coreOnly) {
-            mainItems = mainItems.filter(item => String(item.is_nice_to_have).toLowerCase() !== 'true');
-        }
-
-        if (!mainItems || mainItems.length === 0) {
-            section.classList.add('hidden');
-            return;
-        }
-
+        const mainItems = Store.getVisibleItems();
         section.classList.remove('hidden');
-
-        let groups = {};
-
-        if (Store.state.viewMode === 'rooms') {
-            if (Store.state.currentRoom && Store.state.currentRoom !== 'All') {
-                const currentRoomNorm = String(Store.state.currentRoom).trim().toLowerCase();
-                mainItems = mainItems.filter(item => String(item.room || '').trim().toLowerCase() === currentRoomNorm);
-            }
-            mainItems.forEach(item => {
-                const groupName = item.room || 'Unassigned';
-                if (!groups[groupName]) groups[groupName] = [];
-                groups[groupName].push(item);
-            });
-        } else if (Store.state.viewMode === 'stores') {
-            mainItems.forEach(item => {
-                const groupName = item.store || 'Unassigned';
-                if (!groups[groupName]) groups[groupName] = [];
-                groups[groupName].push(item);
-            });
-        }
+        const groups = Object.create(null);
+        mainItems.forEach(item => {
+            const groupName = (Store.state.viewMode === 'stores' ? item.store : item.room) || 'Unassigned';
+            (groups[groupName] ||= []).push(item);
+        });
 
         // Target 'room-details'. Clear innerHTML since we will build headers + carousels dynamically.
         // Also add the original container id to avoid changing the HTML layout.
-        section.innerHTML = '<h2>Selected Products</h2><div id="carousel-container" style="display: flex; flex-direction: column; gap: 0;"></div>';
+        section.innerHTML = '<h2 id="results-title" tabindex="-1"></h2><p id="results-count" class="planner-note" role="status"></p><div id="carousel-container" style="display: flex; flex-direction: column; gap: 0;"></div>';
+        document.getElementById('results-title').textContent = Store.state.viewMode === 'stores' ? 'Shopping by store' : (Store.state.currentRoom === 'All' ? 'Furniture' : UI.roomLabel(Store.state.currentRoom));
+        document.getElementById('results-count').textContent = mainItems.length + ' matching item' + (mainItems.length === 1 ? '' : 's');
         const rootContainer = document.getElementById('carousel-container');
 
         if (Object.keys(groups).length === 0) {
-             section.classList.add('hidden');
+             const empty = document.createElement('p');
+             empty.className = 'planner-empty';
+             empty.textContent = 'No furniture matches these filters. Try another status or priority, or reset filters.';
+             rootContainer.appendChild(empty);
              return;
         }
 
-        Object.keys(groups).forEach(groupName => {
+        Object.keys(groups).sort((a, b) => a.localeCompare(b)).forEach(groupName => {
             const groupItems = groups[groupName];
             
             const groupHeader = document.createElement('h2');
             groupHeader.style.cssText = 'margin-top: 32px; font-size: 16px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.1em;';
-            groupHeader.textContent = groupName;
+            groupHeader.textContent = (Store.state.viewMode === 'rooms' ? UI.roomLabel(groupName) : groupName) + ' · ' + groupItems.length;
             rootContainer.appendChild(groupHeader);
 
             const container = document.createElement('div');
@@ -264,6 +289,7 @@ export const UI = {
                 const card = document.createElement('div');
                 card.className = `carousel-item ${purchasedClass}`;
                 card.style.cursor = 'pointer';
+                card.dataset.itemId = item.id;
 
                 card.innerHTML = `
                     <img data-src="${imgUrl}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="${item.name || 'Item'}">
@@ -273,6 +299,11 @@ export const UI = {
                     </div>
                 `;
 
+                const tags = document.createElement('p');
+                tags.className = 'item-tags';
+                tags.textContent = (isPurchased ? 'Purchased' : 'To buy') + ' · ' + (String(item.is_nice_to_have).toLowerCase() === 'true' ? 'Nice to have' : 'Required');
+                if (Store.state.viewMode === 'stores') tags.textContent += ' · ' + UI.roomLabel(item.room || 'Unassigned');
+                card.querySelector('.details').appendChild(tags);
                 const imgElem = card.querySelector('img');
                 UI.lazyLoadImage(imgElem);
 
@@ -589,17 +620,7 @@ export const UI = {
                 // Close the modal
                 document.getElementById('comparison-modal').classList.add('hidden');
 
-                // Trigger render with current room/store filters
-                const filteredItems = Store.state.items.filter(item => {
-                    const currentRoomNorm = String(Store.state.currentRoom || '').trim().toLowerCase();
-                    const itemRoomNorm = String(item.room || '').trim().toLowerCase();
-                    const roomMatch = !Store.state.currentRoom || Store.state.currentRoom === 'All' || itemRoomNorm === currentRoomNorm;
-                    const storeMatch = Store.state.currentStore === 'All' || item.store === Store.state.currentStore;
-                    return roomMatch && storeMatch;
-                });
-
-                UI.renderCarousel(filteredItems);
-                UI.updateBudget(Store.getBudgetStats());
+                Store.setState({ items: Store.state.items });
 
             } catch (err) {
                 console.error("Error swapping items:", err);

@@ -492,3 +492,44 @@ h1, h2, h3, h4, h5, h6, .brand {
     .finance-table { font-size: 11px; }
     .finance-table th, .finance-table td { padding: 12px 4px; }
 }
+
+/* Room planning and shopping filters share one scrollable sidebar. */
+#planning-panel { min-width: 0; min-height: 0; padding: 24px 20px 90px; box-sizing: border-box; background: var(--surface); }
+#planning-panel h2 { font-size: 20px; margin: 0 0 8px; }
+.planner-note { color: var(--accents); font-size: 12px; line-height: 1.6; margin: 0 0 14px; }
+#room-summaries { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.room-summary { display: flex; flex-direction: column; gap: 7px; text-align: left; background: #24201b; border: 1px solid #403b33; border-radius: 10px; padding: 12px; color: var(--text-light); font: inherit; cursor: pointer; }
+.room-summary strong { font-size: 13px; }
+.room-summary small { font-size: 11px; color: var(--accents); }
+.room-required { color: #b6d4b8; font-size: 12px; }
+.room-summary[aria-pressed="true"] { background: #253127; border-color: #8cac8e; }
+.room-summary:hover { border-color: #8cac8e; }
+.item-filters { margin: 24px 0; padding: 18px 0; border-top: 1px solid #403b33; border-bottom: 1px solid #403b33; }
+.filter-row { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+.filter-row button, .text-button { font: inherit; font-size: 12px; min-height: 40px; border-radius: 8px; padding: 8px 10px; cursor: pointer; background: transparent; color: var(--accents); border: 1px solid #403b33; }
+.filter-row button[aria-pressed="true"] { color: var(--text-light); background: #354338; border-color: #8cac8e; }
+.store-filter-label { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--accents); }
+#store-filter { flex: 1; min-width: 0; padding: 10px; border: 1px solid #403b33; border-radius: 8px; color: var(--text-light); background: #24201b; font: inherit; }
+.text-button { border: 0; padding-left: 0; text-decoration: underline; margin-top: 6px; }
+#planning-panel #room-details { padding: 0; height: auto; overflow: visible; border: 0; }
+.planner-empty { border: 1px dashed #62594c; padding: 18px; border-radius: 8px; font-size: 13px; line-height: 1.6; color: var(--accents); }
+.item-tags { font-size: 11px; color: var(--accents); line-height: 1.6; }
+#results-title { scroll-margin-top: 90px; }
+button:focus-visible, select:focus-visible { outline: 2px solid #b6d4b8; outline-offset: 3px; }
+#view-toggles .view-btn.active { background: #354338 !important; border-color: #8cac8e !important; }
+#view-toggles .view-btn:not(.active) { background: transparent !important; }
+@media (min-width: 1024px) {
+    #planning-panel { grid-column: 2; grid-row: 2; overflow-y: auto; border-left: 1px solid #403b33; }
+    #hero-map { min-height: 0; }
+}
+@media (max-width: 600px) {
+    .sticky-top { padding: 12px; flex-wrap: wrap; gap: 10px; }
+    #view-toggles { order: 3; width: 100%; }
+    #planning-panel { padding: 20px 14px 90px; }
+    #hero-map { height: 45vh; }
+}
+@media (max-width: 600px) {
+    header.glass-panel.sticky-top { justify-content: space-between; }
+    .sticky-top .brand { width: auto; margin-bottom: 0; }
+    #results-title { scroll-margin-top: 130px; }
+}

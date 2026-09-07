@@ -18,8 +18,7 @@
         
         <div id="view-toggles" style="display: flex; gap: 8px;">
             <button id="btn-view-rooms" class="view-btn active" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(173, 171, 158, 0.15); color: var(--text-primary); padding: 6px 16px; border-radius: 20px; font-family: var(--font-main); font-size: 12px; cursor: pointer; transition: 0.2s;">Rooms</button>
-            <button id="btn-view-stores" class="view-btn" style="background: transparent; border: 1px solid transparent; color: var(--text-secondary); padding: 6px 16px; border-radius: 20px; font-family: var(--font-main); font-size: 12px; cursor: pointer; transition: 0.2s;">Stores</button>
-            <button id="btn-core-only" class="view-btn" style="background: transparent; border: 1px solid rgba(173, 171, 158, 0.15); color: var(--text-secondary); padding: 6px 16px; border-radius: 20px; font-family: var(--font-main); font-size: 12px; cursor: pointer; transition: 0.2s; margin-left: 8px;">Required Only</button>
+            <button id="btn-view-stores" class="view-btn" style="background: transparent; border: 1px solid transparent; color: var(--text-secondary); padding: 6px 16px; border-radius: 20px; font-family: var(--font-main); font-size: 12px; cursor: pointer; transition: 0.2s;">Shop by store</button>
         </div>
 
         <div>
@@ -30,10 +29,34 @@
     <main id="hero-map">
         </main>
 
-    <section id="room-details" class="hidden">
+    <aside id="planning-panel" aria-label="Furniture planner">
+        <section class="room-overview" aria-labelledby="room-overview-title">
+            <h2 id="room-overview-title">Your rooms</h2>
+            <p class="planner-note">Required left to spend · purchase progress</p>
+            <div id="room-summaries"><p class="planner-note">Loading rooms…</p></div>
+        </section>
+        <section class="item-filters" aria-label="Filter furniture">
+            <div class="filter-row" role="group" aria-label="Purchase status">
+                <button data-purchase="all" aria-pressed="true">All</button>
+                <button data-purchase="to-buy" aria-pressed="false">To buy</button>
+                <button data-purchase="purchased" aria-pressed="false">Purchased</button>
+            </div>
+            <div class="filter-row" role="group" aria-label="Priority">
+                <button data-priority="all" aria-pressed="true">All priorities</button>
+                <button data-priority="required" aria-pressed="false">Required</button>
+                <button data-priority="optional" aria-pressed="false">Nice to have</button>
+            </div>
+            <label class="store-filter-label" for="store-filter">Store
+                <select id="store-filter"><option value="All">All stores</option></select>
+            </label>
+            <button id="reset-filters" class="text-button">Reset filters</button>
+        </section>
+    <section id="room-details" aria-label="Furniture results">
         <h2>Selected Products</h2>
         <div id="carousel-container" class="carousel"></div>
     </section>
+
+    </aside>
 
     <button id="fab" class="fab-pill"><span>+</span> Add</button>
 

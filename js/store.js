@@ -7,7 +7,8 @@ export const Store = {
         currentStore: 'All',
         viewMode: 'rooms',
         isLoading: true,
-        coreOnly: false
+        purchaseFilter: 'all',
+        priorityFilter: 'all'
     },
 
     listeners: [],
@@ -32,6 +33,10 @@ export const Store = {
         return this.state.items.filter(item => item.room === roomId);
     },
 
+    getVisibleItems() {
+        return filterItems(this.state.items, this.state);
+    },
+
     getBudgetStats: function() {
         return calculateBudget(this.state.items, this.state.config.Room_List);
     }
@@ -45,7 +50,7 @@ const money = value => {
 };
 
 export function calculateBudget(items = [], configuredRooms = []) {
-    const bucket = () => ({ paid: 0, remaining: 0, total: 0, count: 0, unpriced: 0, estimatedPaid: 0 });
+    const bucket = () => ({ paid: 0, remaining: 0, total: 0, count: 0, purchasedCount: 0, unpriced: 0, estimatedPaid: 0 });
     const summary = () => ({ required: bucket(), optional: bucket(), spent: 0, remaining: 0, grandTotal: 0 });
     const global = summary();
     const rooms = Object.create(null);
@@ -67,6 +72,7 @@ export function calculateBudget(items = [], configuredRooms = []) {
         for (const target of [global, rooms[room]]) {
             const group = target[category];
             group.count++;
+            if (purchased) group.purchasedCount++;
             if (amount === null) group.unpriced++;
             if (purchased && actual === null) group.estimatedPaid++;
             group[purchased ? 'paid' : 'remaining'] += amount ?? 0;
@@ -79,4 +85,19 @@ export function calculateBudget(items = [], configuredRooms = []) {
         target.grandTotal = target.spent + target.remaining;
     }
     return { global, rooms, warnings };
+}
+
+export function filterItems(items = [], filters = {}) {
+    const normalize = value => String(value || '').trim().toLowerCase();
+    return items.filter(item => {
+        if (!item || !item.id || !item.name || normalize(item.type) === 'alternative') return false;
+        const room = normalize(item.room) || 'unassigned';
+        if (filters.currentRoom && filters.currentRoom !== 'All' && room !== normalize(filters.currentRoom)) return false;
+        if (filters.currentStore && filters.currentStore !== 'All' && item.store !== filters.currentStore) return false;
+        if (filters.purchaseFilter === 'to-buy' && flag(item.is_purchased)) return false;
+        if (filters.purchaseFilter === 'purchased' && !flag(item.is_purchased)) return false;
+        if (filters.priorityFilter === 'required' && flag(item.is_nice_to_have)) return false;
+        if (filters.priorityFilter === 'optional' && !flag(item.is_nice_to_have)) return false;
+        return true;
+    });
 }

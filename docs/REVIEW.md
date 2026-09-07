@@ -48,3 +48,11 @@ For this personal app, prioritize everyday decisions:
 - JavaScript syntax checks passed.
 - Headless Edge at 1440×1000 and 390×844: finance opens, current-data totals render, tables have no horizontal overflow, Escape closes, and no uncaught page errors. Screenshots inspected.
 - Browser API responses used a current Sheet snapshot to avoid changing live purchases. Live backend mutation flows and deployed frontend remain unverified.
+
+## Room planning and shopping filters
+
+- Room summaries show required remaining and selected-item purchase counts, independent of list filters. Click a summary or floor-plan room to open its furniture list.
+- Combine All / To buy / Purchased with All priorities / Required / Nice to have and a store selector. Empty matches display a message; Reset filters restores all furniture.
+- Shop by store opens To buy, grouped by retailer across rooms. Priority and store choices remain selected. Item cards identify purchase status, priority, and (in shopping view) room.
+- Save/purchase/swap state updates refresh room summaries and filtered lists immediately. No database schema changes.
+- Validation: six calculation/filter tests pass; desktop/mobile browser checks cover navigation, combined filters, empty results, retailer grouping, and simulated purchase updates. Browser tests use a database snapshot and intercept writes; no live purchases changed.

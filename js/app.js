@@ -7,58 +7,33 @@ async function init() {
 
     UI.initEscapeListener();
 
-    // Wire UI budget updates to Store
-    Store.subscribe((state) => {
+    Store.subscribe(() => {
         UI.updateBudget(Store.getBudgetStats());
+        UI.renderPlanner();
     });
 
     try {
-        // Fetch, sanitize, and inject floor plan SVG via UI controller
         await UI.loadAndInjectSVG('./assets/floorplan.svg');
-
-        // Wire map events after SVG is injected
-        UI.initMapEvents((roomId) => {
-            Store.setState({ viewMode: 'rooms', currentRoom: roomId });
-            document.getElementById('btn-view-rooms').classList.add('active');
-            document.getElementById('btn-view-stores').classList.remove('active');
-            UI.renderCarousel(Store.state.items);
+        UI.initMapEvents(roomId => UI.selectRoom(roomId));
+        document.getElementById('btn-view-stores').addEventListener('click', () => {
+            Store.setState({ viewMode: 'stores', currentRoom: 'All', purchaseFilter: 'to-buy' });
+            UI.focusResults();
         });
-        
-        // Wire View Toggles
-        const btnViewRooms = document.getElementById('btn-view-rooms');
-        const btnViewStores = document.getElementById('btn-view-stores');
-        const btnCoreOnly = document.getElementById('btn-core-only');
-
-        btnViewStores.addEventListener('click', () => {
-            Store.setState({ viewMode: 'stores', currentRoom: 'All' });
-            btnViewStores.classList.add('active');
-            btnViewRooms.classList.remove('active');
-            UI.renderCarousel(Store.state.items);
-        });
-
-        btnViewRooms.addEventListener('click', () => {
+        document.getElementById('btn-view-rooms').addEventListener('click', () => {
             Store.setState({ viewMode: 'rooms', currentRoom: 'All' });
-            btnViewRooms.classList.add('active');
-            btnViewStores.classList.remove('active');
-            UI.renderCarousel(Store.state.items);
         });
-        
-        if (btnCoreOnly) {
-            btnCoreOnly.addEventListener('click', () => {
-                const isCoreOnly = !Store.state.coreOnly;
-                Store.setState({ coreOnly: isCoreOnly });
-                
-                if (isCoreOnly) {
-                    btnCoreOnly.style.background = 'rgba(255,255,255,0.1)';
-                    btnCoreOnly.style.color = 'var(--text-primary)';
-                } else {
-                    btnCoreOnly.style.background = 'transparent';
-                    btnCoreOnly.style.color = 'var(--text-secondary)';
-                }
-                
-                UI.renderCarousel(Store.state.items);
-            });
-        }
+        document.querySelectorAll('[data-purchase]').forEach(button => {
+            button.addEventListener('click', () => Store.setState({ purchaseFilter: button.dataset.purchase }));
+        });
+        document.querySelectorAll('[data-priority]').forEach(button => {
+            button.addEventListener('click', () => Store.setState({ priorityFilter: button.dataset.priority }));
+        });
+        document.getElementById('store-filter').addEventListener('change', event => {
+            Store.setState({ currentStore: event.target.value });
+        });
+        document.getElementById('reset-filters').addEventListener('click', () => {
+            Store.setState({ currentRoom: 'All', currentStore: 'All', purchaseFilter: 'all', priorityFilter: 'all' });
+        });
 
         const data = await fetchAPI('getInitialData');
         Store.setState({
@@ -67,41 +42,6 @@ async function init() {
             items: data.items || [],
             isLoading: false
         });
-
-        // (Deprecated) UI.initRenderNodes(Store.state.renders); // Moved securely to UI.initMapEvents
-
-        // Populate Store Filter
-        const storeFilter = document.getElementById('store-filter');
-        if (storeFilter && Store.state.items) {
-            const uniqueStores = [...new Set(Store.state.items.map(item => item.store).filter(store => store && store.trim() !== ''))];
-            uniqueStores.sort().forEach(storeName => {
-                const option = document.createElement('option');
-                option.value = storeName;
-                option.textContent = storeName;
-                option.style.background = '#121212';
-                storeFilter.appendChild(option);
-            });
-
-            // Cross-Filtering Logic
-            storeFilter.addEventListener('change', (e) => {
-                const selectedStore = e.target.value;
-                Store.setState({ currentStore: selectedStore });
-
-                const filteredItems = Store.state.items.filter(item => {
-                    const roomMatch = !Store.state.currentRoom || item.room === Store.state.currentRoom;
-                    const storeMatch = selectedStore === 'All' || item.store === selectedStore;
-                    return roomMatch && storeMatch;
-                });
-
-                UI.renderCarousel(filteredItems);
-            });
-        }
-
-        // Trigger initial budget render
-        UI.updateBudget(Store.getBudgetStats());
-
-        // Initial render
-        UI.renderCarousel(Store.state.items);
 
         // --- Setup Magic AI Add Modal Logic ---
         let cropper = null;
@@ -345,14 +285,6 @@ async function init() {
                         window.pendingAlternativeParentId = null;
                         window.pendingEditItem = null;
 
-                        if (Store.state.currentRoom) {
-                            const filteredItems = Store.state.items.filter(item => 
-                                item.room === Store.state.currentRoom && 
-                                (Store.state.currentStore === 'All' || item.store === Store.state.currentStore) &&
-                                String(item.type).toLowerCase() !== 'alternative'
-                            );
-                            UI.renderCarousel(filteredItems);
-                        }
                         UI.updateBudget(Store.getBudgetStats());
                         
                         hideAddModal();
